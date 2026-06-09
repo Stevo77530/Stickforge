@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StickForge v0.1</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>StickForge</h1>
+      <p>Essay in. Stick-figure explainer out. No Shorts. No sludge.</p>
+    </div>
+    <span class="badge">v0.1 goblin build</span>
+  </header>
+
+  <main class="layout">
+    <section class="panel controls">
+      <h2>1. Input</h2>
+      <textarea id="essayInput" placeholder="Paste an essay, concept, or argument here..."></textarea>
+      <div class="row">
+        <button id="loadSampleBtn">Load Sample</button>
+        <button id="generateBtn" class="primary">Generate Scene Plan</button>
+      </div>
+
+      <h2>2. Mode</h2>
+      <div class="grid3">
+        <label><input type="radio" name="mode" value="spark" /> Spark<br><small>3–5 min</small></label>
+        <label><input type="radio" name="mode" value="standard" checked /> Standard<br><small>7–9 min</small></label>
+        <label><input type="radio" name="mode" value="deep" /> Deep<br><small>12–18 min</small></label>
+      </div>
+
+      <h2>3. Style</h2>
+      <select id="styleSelect">
+        <option value="chalk">Grim Chalkboard</option>
+        <option value="blueprint">Blueprint</option>
+        <option value="paper">Paper Doodle</option>
+      </select>
+
+      <select id="toneSelect">
+        <option value="clear">Clear Educational</option>
+        <option value="dark" selected>Darkly Intelligent</option>
+        <option value="satirical">Satirical</option>
+      </select>
+
+      <h2>4. Voice</h2>
+      <label class="check"><input id="voiceEnabled" type="checkbox" checked /> Browser voice preview</label>
+      <select id="voiceSelect"></select>
+      <div class="twocol">
+        <label>Rate <input id="voiceRate" type="range" min="0.6" max="1.6" value="1" step="0.05" /></label>
+        <label>Pitch <input id="voicePitch" type="range" min="0.4" max="1.6" value="0.85" step="0.05" /></label>
+      </div>
+      <button id="testVoiceBtn">Test Voice</button>
+
+      <h2>5. Export</h2>
+      <input id="audioInput" type="file" accept="audio/*" />
+      <div class="row wrap">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="recordBtn">Record WebM</button>
+        <button id="recordTabBtn">Record Tab + Voice</button>
+      </div>
+      <div class="row wrap">
+        <button id="exportScriptBtn">Export Script</button>
+        <button id="exportJsonBtn">Export JSON</button>
+      </div>
+      <p id="status">Idle.</p>
+    </section>
+
+    <section class="panel stagePanel">
+      <div class="stageTop">
+        <div>
+          <h2 id="videoTitle">Untitled StickForge Project</h2>
+          <p id="sceneInfo">Generate a scene plan to begin.</p>
+        </div>
+        <span id="timecode">00:00 / 00:00</span>
+      </div>
+      <canvas id="stage" width="1280" height="720"></canvas>
+      <input id="timeline" type="range" min="0" max="1000" value="0" />
+      <div class="tabs">
+        <button class="tab active" data-tab="storyboard">Storyboard</button>
+        <button class="tab" data-tab="script">Script</button>
+        <button class="tab" data-tab="json">JSON</button>
+      </div>
+      <pre id="output"></pre>
+    </section>
+  </main>
+
+  <footer>
+    Built as a rough local-first prototype. The ugliness is not a bug; it is the larval stage.
+  </footer>
+
+  <script src="src/app.js"></script>
+</body>
+</html>
