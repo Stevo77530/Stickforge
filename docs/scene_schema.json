@@ -1,0 +1,30 @@
+{
+  "schema": "stickforge.storyboard.v0",
+  "title": "Example Title",
+  "createdAt": "2026-06-09T00:00:00.000Z",
+  "mode": "standard",
+  "modeGoal": "full YouTube explainer with real teaching and retention rhythm",
+  "tone": "dark",
+  "style": "chalk",
+  "targetSeconds": 480,
+  "actualSeconds": 480,
+  "aspectRatio": "16:9",
+  "noShorts": true,
+  "scenes": [
+    {
+      "id": "scene_01",
+      "index": 1,
+      "title": "The Hook",
+      "duration": 34,
+      "narration": "Start with the uncomfortable question.",
+      "onscreenText": "What if machines buy the future first?",
+      "visual": {
+        "type": "hook",
+        "props": ["question", "power"],
+        "action": "reveal"
+      },
+      "camera": "slow_push",
+      "retentionBeat": "Open with a strong thesis/question."
+    }
+  ]
+}
