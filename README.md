@@ -26,6 +26,15 @@ Recommended browser: Chrome or Edge.
 - Export storyboard JSON
 - Record WebM video
 
+## Grimdark Ash
+
+Pick **Grimdark Ash** under Style and **Grimdark** under Tone, or click **Wild Side (Grimdark)** to load the sample tour.
+
+- **Style: Grimdark Ash** — blood moon, ruined skyline, falling ash and embers, film grain, vignette, torch flicker, serif captions, bone/blood/ember palette. Reskins every scene type.
+- **Tone: Grimdark** — grim scene titles (The Gate, The Toll, Omen, Last Rites…), darker on-screen labels (THE SYSTEM → THE THRONE, OPTION B → WALK WILD), and five extra scene types: `gate`, `road`, `ruins`, `omen`, `pyre`.
+
+Style and tone are independent, so you can mix them (e.g. Grimdark tone on Blueprint).
+
 ## Modes
 
 - **Spark** — short concept test
