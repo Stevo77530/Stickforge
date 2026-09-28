@@ -1,5 +1,69 @@
 {
-  "schema": "stickforge.storyboard.v0",
+  "schema": "stickforge.storyboard.v0.3",
+  "_notes": {
+    "import": "Paste or load via Import JSON Storyboard. Code fences and leading prose are stripped. A bare array of scenes, a storyboard object, or a -project.json bundle are all accepted.",
+    "required": "scenes (non-empty array). Everything else has defaults.",
+    "duration": "Seconds per scene, 3-600. Out-of-range values are clamped. Alias: seconds.",
+    "narration": "Aliases: voiceover, script.",
+    "onscreenText": "Aliases: onScreenText, caption. Defaults to the scene title.",
+    "visual": "Object {type, action, props?} or a bare type string. Unknown types fall back to 'idea'.",
+    "visual.type": [
+      "hook",
+      "goblin",
+      "sneak",
+      "heist",
+      "underground",
+      "machine",
+      "network",
+      "console",
+      "house",
+      "council",
+      "choice",
+      "map",
+      "conflict",
+      "idea",
+      "closing"
+    ],
+    "visual.action (free text; suggestions)": [
+      "reveal",
+      "point",
+      "build",
+      "argue",
+      "collapse",
+      "transform",
+      "sneak",
+      "steal",
+      "trade",
+      "vote",
+      "flee",
+      "discover"
+    ],
+    "camera": [
+      "slow_push",
+      "pan",
+      "wide",
+      "shake",
+      "zoom_out",
+      "drift"
+    ],
+    "mode": [
+      "spark",
+      "standard",
+      "deep"
+    ],
+    "style": [
+      "chalk",
+      "blueprint",
+      "paper"
+    ],
+    "tone": [
+      "clear",
+      "dark",
+      "satirical"
+    ],
+    "aspectRatio": "Always forced to 16:9. Shorts/vertical input is ignored with a warning.",
+    "id/index": "Reassigned on import from scene order."
+  },
   "title": "Example Title",
   "createdAt": "2026-06-09T00:00:00.000Z",
   "mode": "standard",
@@ -20,7 +84,10 @@
       "onscreenText": "What if machines buy the future first?",
       "visual": {
         "type": "hook",
-        "props": ["question", "power"],
+        "props": [
+          "question",
+          "power"
+        ],
         "action": "reveal"
       },
       "camera": "slow_push",

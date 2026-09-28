@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>StickForge v0.1</title>
+  <title>StickForge v0.3</title>
   <link rel="stylesheet" href="src/style.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
       <h1>StickForge</h1>
       <p>Essay in. Stick-figure explainer out. No Shorts. No sludge.</p>
     </div>
-    <span class="badge">v0.1 goblin build</span>
+    <span class="badge">v0.3 goblin build</span>
   </header>
 
   <main class="layout">
@@ -22,6 +22,10 @@
       <div class="row">
         <button id="loadSampleBtn">Load Sample</button>
         <button id="generateBtn" class="primary">Generate Scene Plan</button>
+      </div>
+      <div class="row">
+        <button id="importBtn">Import JSON Storyboard</button>
+        <button id="newProjectBtn">New Project</button>
       </div>
 
       <h2>2. Mode</h2>
@@ -54,19 +58,24 @@
       <button id="testVoiceBtn">Test Voice</button>
 
       <h2>5. Export</h2>
-      <input id="audioInput" type="file" accept="audio/*" />
+      <label class="fileLabel">Narration audio (optional, replaces browser voice)
+        <input id="audioInput" type="file" accept="audio/*" />
+      </label>
       <div class="row wrap">
         <button id="playBtn">Play</button>
         <button id="pauseBtn">Pause</button>
         <button id="resetBtn">Reset</button>
         <button id="recordBtn">Record WebM</button>
         <button id="recordTabBtn">Record Tab + Voice</button>
+        <button id="stopRecordBtn" class="danger">Stop Recording</button>
       </div>
       <div class="row wrap">
         <button id="exportScriptBtn">Export Script</button>
         <button id="exportJsonBtn">Export JSON</button>
+        <button id="exportProjectBtn">Export Project</button>
       </div>
       <p id="status">Idle.</p>
+      <p id="saveState"></p>
     </section>
 
     <section class="panel stagePanel">
@@ -81,12 +90,27 @@
       <input id="timeline" type="range" min="0" max="1000" value="0" />
       <div class="tabs">
         <button class="tab active" data-tab="storyboard">Storyboard</button>
+        <button class="tab" data-tab="edit">Edit Scenes</button>
         <button class="tab" data-tab="script">Script</button>
         <button class="tab" data-tab="json">JSON</button>
       </div>
       <pre id="output"></pre>
+      <div id="editor" hidden></div>
+      <datalist id="actionList"></datalist>
     </section>
   </main>
+
+  <dialog id="importDialog">
+    <h2>Import storyboard JSON</h2>
+    <p>Paste a storyboard from ChatGPT or Claude (code fences are fine), or load a <code>-storyboard.json</code> / <code>-project.json</code> file. See <code>docs/scene_schema.json</code> for the format.</p>
+    <textarea id="importText" placeholder='{ "title": "...", "mode": "standard", "scenes": [ ... ] }'></textarea>
+    <p id="importError"></p>
+    <div class="row wrap">
+      <button id="importPasteBtn" class="primary">Import Pasted JSON</button>
+      <label class="fileBtn">Load File…<input id="importFile" type="file" accept=".json,application/json" hidden /></label>
+      <button id="importCancelBtn">Cancel</button>
+    </div>
+  </dialog>
 
   <footer>
     Built as a rough local-first prototype. The ugliness is not a bug; it is the larval stage.

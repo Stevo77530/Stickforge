@@ -1,4 +1,4 @@
-# StickForge v0.1
+# StickForge v0.3
 
 StickForge is a browser-based prototype for turning essays or concepts into crude stick-figure explainer animations.
 
@@ -18,13 +18,18 @@ Recommended browser: Chrome or Edge.
 
 - Paste essay or load sample
 - Generate crude scene plan
+- **Import JSON storyboards** written by ChatGPT/Claude (paste or file)
+- **Scene editor**: edit narration, on-screen text, duration, visual, action, camera; reorder, duplicate, delete, add
+- **Autosave** to browser localStorage, plus **New Project** to clear
+- **Export Project** bundle (essay + settings + storyboard), re-importable
 - Preview stick-figure animation
 - Browser-native voice preview
 - Voice selection, rate, and pitch controls
 - Tab recording path for voice capture
 - Export narration script
 - Export storyboard JSON
-- Record WebM video
+- Record WebM video with live status and a **Stop Recording** button
+- Optional narration audio file: plays in sync and is baked into Record WebM
 
 ## Modes
 
@@ -52,12 +57,13 @@ Expected GitHub Pages URL:
 https://stevo77530.github.io/Stickforge/
 ```
 
-## Known v0.1 limits
+## Known v0.3 limits
 
 - Browser voice does not behave consistently across every device/browser.
 - Voice recording relies on browser tab capture.
 - Export is WebM, not MP4.
-- The scene planner is rule-based and primitive.
+- The built-in scene planner is rule-based and primitive. Import a JSON storyboard for real direction.
+- Autosave lives in one browser. Use Export Project to move work between machines.
 - The animation system is intentionally crude.
 
 This is a working goblin, not a finished cathedral.
