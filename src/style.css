@@ -123,3 +123,23 @@ pre {
   .layout { grid-template-columns: 1fr; }
   .topbar { align-items: flex-start; flex-direction: column; }
 }
+
+/* Grimdark Ash theme — toggled when the Grimdark Ash style is selected */
+button.grimBtn { background: #1d0c0b; border-color: #6b1a15; color: #e2b8a8; }
+button.grimBtn:hover { border-color: #b3261e; }
+body.grim {
+  --bg: #060404;
+  --panel: #120c0b;
+  --panel2: #1d1210;
+  --text: #e8dfcf;
+  --muted: #8a7d72;
+  --line: #3a2320;
+  --accent: #b3261e;
+  background: radial-gradient(circle at top, #2a0e0c 0%, var(--bg) 55%);
+}
+body.grim h1, body.grim h2, body.grim #videoTitle { font-family: Georgia, "Times New Roman", serif; letter-spacing: 1px; }
+body.grim .panel { background: rgba(18, 12, 11, .95); }
+body.grim h2 { color: #d9c9b6; }
+body.grim button.primary { background: #2a0d0b; color: #f0c2b3; }
+body.grim #timecode, body.grim #status { color: #d4574b; }
+body.grim canvas { background: #000; border-color: #3a2320; }
