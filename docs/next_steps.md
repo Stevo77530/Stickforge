@@ -15,9 +15,19 @@ Recommended first essay candidates:
 3. EPCOT / subscription city essay
 4. AI likeness licensing essay
 
-## Next build feature: JSON import
+## Done in v0.3 (Phase 1: stabilize)
 
-The most important missing feature is JSON import. That lets ChatGPT/Codex become the true director while the browser app remains the puppet theater.
+- JSON import (paste or file, tolerant of code fences, with validation and warnings)
+- Scene editor cards (edit, reorder, duplicate, delete, add, jump-to-scene)
+- localStorage autosave + New Project
+- Project bundle export/import
+- Recording status, explicit Stop Recording, clean stop when screen share ends
+- Narration audio file plays in sync and is mixed into canvas recording
+- Resume/seek speaks from the current scene instead of restarting narration
+
+## Next build feature: Phase 2 renderer
+
+More visual primitives (map, factory, brain, courtroom, ship, council table, skull, AI oracle) and make `visual.action` actually change the animation. Right now only `visual.type` and `camera` drive the renderer.
 
 ## Better technical architecture later
 

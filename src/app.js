@@ -27,6 +27,21 @@ let raf = null;
 let voices = [];
 let recorder = null;
 let chunks = [];
+let recordTimer = null;
+let recordStream = null;
+let narrationAudio = null;
+let audioCtx = null;
+let audioDest = null;
+let saveTimer = null;
+
+const VISUAL_TYPES = ['hook','goblin','sneak','heist','underground','machine','network','console','house','council','choice','map','conflict','idea','closing'];
+const ACTIONS = ['reveal','point','build','argue','collapse','transform','sneak','steal','trade','vote','flee','discover'];
+const CAMERAS = ['slow_push','pan','wide','shake','zoom_out','drift'];
+const STYLES = ['chalk','blueprint','paper'];
+const TONES = ['clear','dark','satirical'];
+const AUTOSAVE_KEY = 'stickforge.autosave.v1';
+const MIN_SCENE_SECONDS = 3;
+const MAX_SCENE_SECONDS = 600;
 
 const ease = (x) => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2, 2)/2;
 const pulse = (x) => 0.5 + 0.5 * Math.sin(x);
@@ -101,13 +116,135 @@ function makeStoryboard() {
     actualSeconds: scenes.reduce((a,s)=>a+s.duration,0),
     aspectRatio: '16:9',
     noShorts: true,
+    source: 'rule-based',
     motionPass: 'v0.2: sub-beats, moving props, camera motion, animated entrances',
     scenes
   };
+  setStoryboard(storyboard, `Generated ${scenes.length} scenes with the rule-based planner. ${mode.label} mode. No Shorts.`);
+}
+
+function setStoryboard(sb, message){
+  if(playing) pause();
+  storyboard = sb;
+  syncTotals();
+  $('styleSelect').value = storyboard.style;
+  $('toneSelect').value = storyboard.tone;
+  const modeInput = document.querySelector(`input[name="mode"][value="${storyboard.mode}"]`);
+  if(modeInput) modeInput.checked = true;
   pausedAt = 0;
   renderOutput();
   drawFrame(0);
-  setStatus(`Generated ${scenes.length} scenes with motion pass v0.2. ${mode.label} mode. No Shorts.`);
+  scheduleSave();
+  if(message) setStatus(message);
+}
+
+function syncTotals(){
+  storyboard.scenes.forEach((s,i)=>{ s.index = i+1; s.id = `scene_${String(i+1).padStart(2,'0')}`; });
+  storyboard.actualSeconds = totalSeconds();
+}
+
+/* ---------- JSON import ---------- */
+
+function extractJson(text){
+  let t = String(text).trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if(fence) t = fence[1].trim();
+  if(!/^[\[{]/.test(t)){
+    const start = t.search(/[\[{]/);
+    if(start < 0) throw new Error('No JSON object found.');
+    t = t.slice(start);
+  }
+  return JSON.parse(t);
+}
+
+function pick(value, allowed, fallback, label, warnings){
+  if(allowed.includes(value)) return value;
+  if(value !== undefined && value !== null && value !== '') warnings.push(`${label}: unknown "${value}", using "${fallback}".`);
+  return fallback;
+}
+
+function normalizeScene(raw, i, warnings){
+  const where = `scene ${i+1}`;
+  if(!raw || typeof raw !== 'object') throw new Error(`${where} is not an object.`);
+  const visual = typeof raw.visual === 'string' ? { type: raw.visual } : (raw.visual || {});
+  let duration = Number(raw.duration ?? raw.seconds);
+  if(!Number.isFinite(duration) || duration <= 0){ warnings.push(`${where}: missing duration, using 30s.`); duration = 30; }
+  if(duration < MIN_SCENE_SECONDS || duration > MAX_SCENE_SECONDS){
+    const d = clamp(duration, MIN_SCENE_SECONDS, MAX_SCENE_SECONDS);
+    warnings.push(`${where}: duration ${duration}s clamped to ${d}s.`); duration = d;
+  }
+  const narration = String(raw.narration ?? raw.voiceover ?? raw.script ?? '').trim();
+  if(!narration) warnings.push(`${where}: no narration.`);
+  const title = String(raw.title || `Beat ${i+1}`).trim();
+  return {
+    ...raw,
+    title,
+    duration: Math.round(duration),
+    narration,
+    onscreenText: String(raw.onscreenText ?? raw.onScreenText ?? raw.caption ?? title).trim(),
+    visual: {
+      ...visual,
+      type: pick(visual.type, VISUAL_TYPES, 'idea', `${where} visual.type`, warnings),
+      action: String(visual.action || 'reveal')
+    },
+    camera: pick(raw.camera, CAMERAS, 'drift', `${where} camera`, warnings),
+    retentionBeat: String(raw.retentionBeat || 'One idea, multiple visual changes, no swamp.')
+  };
+}
+
+function normalizeStoryboard(raw){
+  const warnings = [];
+  let project = null;
+  if(Array.isArray(raw)) raw = { scenes: raw };
+  if(raw && raw.storyboard && typeof raw.storyboard === 'object'){ project = raw; raw = raw.storyboard; }
+  if(!raw || !Array.isArray(raw.scenes)) throw new Error('Expected an object with a "scenes" array.');
+  if(!raw.scenes.length) throw new Error('Storyboard has no scenes.');
+  if(/short/i.test(String(raw.mode || '')) || raw.aspectRatio === '9:16') warnings.push('Shorts/vertical format ignored. StickForge renders 16:9 only.');
+  const modeKey = MODES[raw.mode] ? raw.mode : 'standard';
+  if(raw.mode && !MODES[raw.mode]) warnings.push(`mode: unknown "${raw.mode}", using "standard".`);
+  const scenes = raw.scenes.map((s,i)=>normalizeScene(s,i,warnings));
+  const sb = {
+    ...raw,
+    schema: 'stickforge.storyboard.v0.3',
+    title: String(raw.title || 'Imported StickForge Project').trim(),
+    createdAt: raw.createdAt || new Date().toISOString(),
+    mode: modeKey,
+    modeGoal: raw.modeGoal || MODES[modeKey].goal,
+    tone: pick(raw.tone, TONES, $('toneSelect').value, 'tone', warnings),
+    style: pick(raw.style, STYLES, $('styleSelect').value, 'style', warnings),
+    targetSeconds: Number(raw.targetSeconds) || MODES[modeKey].seconds,
+    aspectRatio: '16:9',
+    noShorts: true,
+    source: raw.source || 'imported',
+    scenes
+  };
+  return { storyboard: sb, project, warnings };
+}
+
+function importJsonText(text){
+  try{
+    const { storyboard: sb, project, warnings } = normalizeStoryboard(extractJson(text));
+    if(project) applyProjectSettings(project);
+    const drift = Math.abs(sb.scenes.reduce((a,s)=>a+s.duration,0) - sb.targetSeconds);
+    if(drift > sb.targetSeconds * 0.25) warnings.push(`Runtime is ${fmt(sb.scenes.reduce((a,s)=>a+s.duration,0))}, target is ${fmt(sb.targetSeconds)}.`);
+    setStoryboard(sb, `Imported ${sb.scenes.length} scenes.` + (warnings.length ? ` ${warnings.length} warning(s): ${warnings.slice(0,3).join(' ')}${warnings.length>3?' …':''}` : ''));
+    if(warnings.length) console.warn('StickForge import warnings:', warnings);
+    closeImport();
+    return true;
+  } catch(err){
+    setStatus(`Import failed: ${err.message}`);
+    $('importError').textContent = err.message;
+    return false;
+  }
+}
+
+function openImport(){ $('importError').textContent=''; $('importDialog').showModal(); $('importText').focus(); }
+function closeImport(){ if($('importDialog').open) $('importDialog').close(); }
+async function importFile(file){
+  if(!file) return;
+  const text = await file.text();
+  $('importText').value = text;
+  importJsonText(text);
 }
 
 function totalSeconds(){ return storyboard ? storyboard.scenes.reduce((a,s)=>a+s.duration,0) : 0; }
@@ -363,24 +500,194 @@ function animate(){
   if(t>=totalSeconds()){ pause(); drawFrame(totalSeconds()); return; }
   drawFrame(t); raf=requestAnimationFrame(animate);
 }
-function play(){ if(!storyboard) makeStoryboard(); playing=true; startedAt=performance.now()-pausedAt*1000; speakAll(); animate(); setStatus('Playing motion pass v0.2.'); }
-function pause(){ playing=false; cancelAnimationFrame(raf); pausedAt=Number($('timeline').value)/1000*totalSeconds(); speechSynthesis.cancel(); setStatus('Paused.'); }
+function play(){
+  if(!storyboard) makeStoryboard();
+  if(playing) return;
+  if(pausedAt >= totalSeconds()) pausedAt = 0;
+  playing=true; startedAt=performance.now()-pausedAt*1000;
+  if(narrationAudio){ narrationAudio.currentTime = pausedAt; narrationAudio.play().catch(()=>{}); }
+  else speakFrom(pausedAt);
+  animate(); if(!recorder) setStatus('Playing.');
+}
+function pause(){
+  const wasPlaying = playing;
+  playing=false; cancelAnimationFrame(raf);
+  if(wasPlaying) pausedAt=clamp((performance.now()-startedAt)/1000,0,totalSeconds());
+  speechSynthesis.cancel(); narrationAudio?.pause();
+  if(!recorder) setStatus('Paused.');
+}
 function reset(){ pause(); pausedAt=0; drawFrame(0); }
-function seek(){ pausedAt=Number($('timeline').value)/1000*totalSeconds(); drawFrame(pausedAt); }
+function seek(){ const was=playing; if(was) pause(); pausedAt=Number($('timeline').value)/1000*totalSeconds(); drawFrame(pausedAt); if(was) play(); }
+function seekTo(t){ const was=playing; if(was) pause(); pausedAt=clamp(t,0,totalSeconds()); drawFrame(pausedAt); if(was) play(); }
+function sceneStart(i){ return storyboard.scenes.slice(0,i).reduce((a,s)=>a+s.duration,0); }
 
 function scriptText(){ return storyboard.scenes.map(s=>`## ${s.index}. ${s.title}\n\n${s.narration}\n`).join('\n'); }
 function storyboardText(){ return storyboard.scenes.map(s=>`${s.index}. ${s.title} (${s.duration}s)\nVisual: ${s.visual.type} / ${s.visual.action}\nText: ${s.onscreenText}\nNarration: ${s.narration}\n`).join('\n'); }
 function renderOutput(){
   $('videoTitle').textContent = storyboard.title;
-  if(activeTab==='json') $('output').textContent = JSON.stringify(storyboard,null,2);
+  const editing = activeTab==='edit';
+  $('output').hidden = editing; $('editor').hidden = !editing;
+  if(editing) renderEditor();
+  else if(activeTab==='json') $('output').textContent = JSON.stringify(storyboard,null,2);
   else if(activeTab==='script') $('output').textContent = scriptText();
   else $('output').textContent = storyboardText();
 }
 function tab(name){ activeTab=name; document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name)); if(storyboard) renderOutput(); }
 
+/* ---------- Scene editor ---------- */
+
+function el(tag, props={}, children=[]){
+  const node = document.createElement(tag);
+  Object.entries(props).forEach(([k,v])=>{ if(k==='class') node.className=v; else if(k in node) node[k]=v; else node.setAttribute(k,v); });
+  [].concat(children).forEach(c=>node.append(c));
+  return node;
+}
+function field(label, input){ return el('label',{class:'field'},[el('span',{textContent:label}), input]); }
+function selectOf(options, value){ return el('select',{},options.map(o=>el('option',{value:o,textContent:o,selected:o===value}))); }
+
+function sceneEdited(){
+  syncTotals();
+  $('videoTitle').textContent = storyboard.title;
+  if(!playing) drawFrame(pausedAt);
+  updateEditorSummary();
+  scheduleSave();
+}
+function updateEditorSummary(){
+  const node = $('editorSummary'); if(!node) return;
+  const total = totalSeconds(), target = storyboard.targetSeconds;
+  const off = Math.abs(total-target) > target*0.25;
+  node.textContent = `${storyboard.scenes.length} scenes · ${fmt(total)} runtime · target ${fmt(target)}${off ? ' — runtime is off target' : ''}`;
+  node.classList.toggle('warn', off);
+}
+function structuralEdit(fn){
+  fn();
+  syncTotals();
+  pausedAt = clamp(pausedAt,0,totalSeconds());
+  renderEditor(); drawFrame(pausedAt); scheduleSave();
+}
+
+function renderEditor(){
+  const root = $('editor');
+  root.replaceChildren();
+  const titleInput = el('input',{type:'text',value:storyboard.title});
+  titleInput.oninput = ()=>{ storyboard.title = titleInput.value; sceneEdited(); };
+  root.append(el('div',{class:'editorHead'},[field('Project title', titleInput), el('p',{id:'editorSummary'})]));
+
+  storyboard.scenes.forEach((scene, i)=>{
+    const titleIn = el('input',{type:'text',value:scene.title});
+    const durIn = el('input',{type:'number',min:MIN_SCENE_SECONDS,max:MAX_SCENE_SECONDS,step:1,value:scene.duration});
+    const typeIn = selectOf(VISUAL_TYPES, scene.visual.type);
+    const actionIn = el('input',{type:'text',value:scene.visual.action}); actionIn.setAttribute('list','actionList');
+    const camIn = selectOf(CAMERAS, scene.camera);
+    const textIn = el('input',{type:'text',value:scene.onscreenText});
+    const narrIn = el('textarea',{value:scene.narration,rows:3});
+
+    titleIn.oninput = ()=>{ scene.title = titleIn.value; sceneEdited(); };
+    durIn.onchange = ()=>{ const d = Math.round(Number(durIn.value)); scene.duration = Number.isFinite(d) ? clamp(d,MIN_SCENE_SECONDS,MAX_SCENE_SECONDS) : scene.duration; durIn.value = scene.duration; sceneEdited(); };
+    typeIn.onchange = ()=>{ scene.visual.type = typeIn.value; sceneEdited(); };
+    actionIn.oninput = ()=>{ scene.visual.action = actionIn.value; sceneEdited(); };
+    camIn.onchange = ()=>{ scene.camera = camIn.value; sceneEdited(); };
+    textIn.oninput = ()=>{ scene.onscreenText = textIn.value; sceneEdited(); };
+    narrIn.oninput = ()=>{ scene.narration = narrIn.value; sceneEdited(); };
+
+    const btn = (label, title, fn, disabled=false)=>{ const b = el('button',{textContent:label,title,disabled}); b.onclick = fn; return b; };
+    const card = el('div',{class:'sceneCard'},[
+      el('div',{class:'sceneCardHead'},[
+        el('strong',{textContent:`${scene.index}.`}),
+        titleIn,
+        el('div',{class:'sceneBtns'},[
+          btn('▶','Jump preview to this scene',()=>seekTo(sceneStart(i))),
+          btn('↑','Move up',()=>structuralEdit(()=>{ const [s]=storyboard.scenes.splice(i,1); storyboard.scenes.splice(i-1,0,s); }), i===0),
+          btn('↓','Move down',()=>structuralEdit(()=>{ const [s]=storyboard.scenes.splice(i,1); storyboard.scenes.splice(i+1,0,s); }), i===storyboard.scenes.length-1),
+          btn('⧉','Duplicate',()=>structuralEdit(()=>storyboard.scenes.splice(i+1,0,structuredClone(scene)))),
+          btn('✕','Delete',()=>{ if(confirm(`Delete scene ${scene.index}?`)) structuralEdit(()=>storyboard.scenes.splice(i,1)); }, storyboard.scenes.length===1)
+        ])
+      ]),
+      el('div',{class:'sceneGrid'},[field('Seconds',durIn), field('Visual',typeIn), field('Action',actionIn), field('Camera',camIn)]),
+      field('On-screen text', textIn),
+      field('Narration', narrIn)
+    ]);
+    root.append(card);
+  });
+
+  const add = el('button',{textContent:'+ Add scene',class:'addScene'});
+  add.onclick = ()=>structuralEdit(()=>storyboard.scenes.push({
+    title:`Beat ${storyboard.scenes.length+1}`, duration:30, narration:'', onscreenText:'New beat',
+    visual:{type:'idea',action:'reveal'}, camera:'drift', retentionBeat:'One idea, multiple visual changes, no swamp.'
+  }));
+  root.append(add);
+  updateEditorSummary();
+}
+
+/* ---------- Autosave + project bundle ---------- */
+
+function projectBundle(){
+  return {
+    schema: 'stickforge.project.v0.3',
+    savedAt: new Date().toISOString(),
+    essay: $('essayInput').value,
+    settings: {
+      voiceEnabled: $('voiceEnabled').checked,
+      voiceName: selectedVoice()?.name || null,
+      voiceRate: Number($('voiceRate').value),
+      voicePitch: Number($('voicePitch').value)
+    },
+    storyboard
+  };
+}
+function applyProjectSettings(project){
+  if(typeof project.essay === 'string') $('essayInput').value = project.essay;
+  const st = project.settings || {};
+  if(typeof st.voiceEnabled === 'boolean') $('voiceEnabled').checked = st.voiceEnabled;
+  if(Number.isFinite(st.voiceRate)) $('voiceRate').value = st.voiceRate;
+  if(Number.isFinite(st.voicePitch)) $('voicePitch').value = st.voicePitch;
+  if(st.voiceName){
+    const idx = voices.findIndex(v=>v.name===st.voiceName);
+    if(idx >= 0) $('voiceSelect').value = idx; else pendingVoiceName = st.voiceName;
+  }
+}
+let pendingVoiceName = null;
+
+function scheduleSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 400); }
+function saveNow(){
+  try{ localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(projectBundle())); $('saveState').textContent = `Autosaved ${new Date().toLocaleTimeString()}`; }
+  catch(err){ $('saveState').textContent = 'Autosave unavailable'; console.warn(err); }
+}
+function restoreAutosave(){
+  let raw = null;
+  try{ raw = localStorage.getItem(AUTOSAVE_KEY); } catch{ return false; }
+  if(!raw) return false;
+  try{
+    const project = JSON.parse(raw);
+    applyProjectSettings(project);
+    if(project.storyboard){
+      const { storyboard: sb } = normalizeStoryboard(project.storyboard);
+      setStoryboard(sb, `Restored autosaved project from ${new Date(project.savedAt).toLocaleString()}.`);
+    }
+    return true;
+  } catch(err){ console.warn('Autosave restore failed', err); return false; }
+}
+function newProject(){
+  if(!confirm('Start a new project? This clears the essay, storyboard and autosave.')) return;
+  if(playing) pause();
+  try{ localStorage.removeItem(AUTOSAVE_KEY); } catch{}
+  storyboard = null; pausedAt = 0;
+  $('essayInput').value = '';
+  $('output').textContent = ''; $('editor').replaceChildren();
+  $('videoTitle').textContent = 'Untitled StickForge Project';
+  $('sceneInfo').textContent = 'Generate a scene plan or import JSON to begin.';
+  $('timecode').textContent = '00:00 / 00:00';
+  $('saveState').textContent = '';
+  drawFrame(0);
+  setStatus('New project.');
+}
+
+/* ---------- Voice ---------- */
+
 function loadVoices(){
   voices = speechSynthesis.getVoices();
-  $('voiceSelect').innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name} — ${v.lang}</option>`).join('');
+  $('voiceSelect').replaceChildren(...voices.map((v,i)=>el('option',{value:i,textContent:`${v.name} — ${v.lang}`})));
+  if(pendingVoiceName){ const idx = voices.findIndex(v=>v.name===pendingVoiceName); if(idx>=0){ $('voiceSelect').value = idx; pendingVoiceName = null; } }
 }
 function selectedVoice(){ return voices[Number($('voiceSelect').value)] || null; }
 function speak(text){
@@ -388,32 +695,107 @@ function speak(text){
   const u=new SpeechSynthesisUtterance(text); const v=selectedVoice(); if(v) u.voice=v;
   u.rate=Number($('voiceRate').value); u.pitch=Number($('voicePitch').value); speechSynthesis.speak(u);
 }
-function speakAll(){ if(!$('voiceEnabled').checked || !storyboard) return; speechSynthesis.cancel(); speak(scriptText().replace(/## .*\n/g,'')); }
+function speakFrom(t){
+  if(!$('voiceEnabled').checked || !storyboard || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const { scene } = sceneAt(t);
+  storyboard.scenes.slice(scene.index-1).forEach(s=>{ if(s.narration) speak(s.narration); });
+}
 function testVoice(){ speechSynthesis.cancel(); speak('StickForge voice test. It sounds ugly, but the goblin speaks. Now with more movement.'); }
 
-function download(text,name,type='text/plain'){
-  const blob=new Blob([text],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),500);
+/* ---------- Narration audio file ---------- */
+
+function loadNarrationAudio(file){
+  if(narrationAudio){ narrationAudio.pause(); URL.revokeObjectURL(narrationAudio.src); }
+  narrationAudio = null;
+  if(!file){ setStatus('Narration audio cleared. Browser voice will be used.'); return; }
+  const audio = new Audio(URL.createObjectURL(file));
+  audio.preload = 'auto';
+  audio.onloadedmetadata = ()=>{
+    const msg = `Loaded narration "${file.name}" (${fmt(audio.duration)}). It replaces browser voice and is included in Record WebM.`;
+    setStatus(storyboard && Math.abs(audio.duration - totalSeconds()) > 5 ? `${msg} Runtime is ${fmt(totalSeconds())}, so adjust scene durations to match.` : msg);
+  };
+  narrationAudio = audio;
+  audioDest = null;
+}
+function narrationTrack(){
+  if(!narrationAudio) return null;
+  if(!audioDest){
+    audioCtx = audioCtx || new AudioContext();
+    const src = audioCtx.createMediaElementSource(narrationAudio);
+    audioDest = audioCtx.createMediaStreamDestination();
+    src.connect(audioDest); src.connect(audioCtx.destination);
+  }
+  audioCtx.resume();
+  return audioDest.stream.getAudioTracks()[0] || null;
+}
+
+/* ---------- Export + recording ---------- */
+
+function download(blobOrText,name,type='text/plain'){
+  const blob = blobOrText instanceof Blob ? blobOrText : new Blob([blobOrText],{type});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function exportScript(){ if(!storyboard) makeStoryboard(); download(scriptText(),`${slug(storyboard.title)}-script.md`,'text/markdown'); }
 function exportJson(){ if(!storyboard) makeStoryboard(); download(JSON.stringify(storyboard,null,2),`${slug(storyboard.title)}-storyboard.json`,'application/json'); }
+function exportProject(){ if(!storyboard) makeStoryboard(); download(JSON.stringify(projectBundle(),null,2),`${slug(storyboard.title)}-project.json`,'application/json'); }
 
-async function recordCanvas(){
-  if(!storyboard) makeStoryboard(); reset();
-  chunks=[]; const stream=canvas.captureStream(30); recorder=new MediaRecorder(stream,{mimeType:'video/webm'});
-  recorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
-  recorder.onstop=()=>{ const blob=new Blob(chunks,{type:'video/webm'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${slug(storyboard.title)}.webm`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),500); setStatus('Downloaded WebM.'); };
-  recorder.start(); play(); setTimeout(()=>{ recorder?.stop(); pause(); }, totalSeconds()*1000+500);
-  setStatus('Recording canvas WebM. Browser TTS may not be included.');
+function pickMimeType(){
+  const options = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'];
+  return options.find(t=>window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+}
+function setRecordingUI(on){
+  $('stopRecordBtn').disabled = !on;
+  ['recordBtn','recordTabBtn','playBtn','pauseBtn','resetBtn','generateBtn','importBtn','newProjectBtn','timeline'].forEach(id=>$(id).disabled = on);
+  $('status').classList.toggle('recording', on);
+}
+function startRecorder(stream, suffix, label){
+  const mimeType = pickMimeType();
+  const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+  chunks = [];
+  recordStream = stream;
+  recorder = new MediaRecorder(stream, mimeType ? {mimeType} : undefined);
+  recorder.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data); };
+  recorder.onstop = ()=>{
+    clearInterval(recordTimer);
+    recordStream?.getTracks().forEach(t=>t.stop()); recordStream = null;
+    const done = recorder; recorder = null;
+    if(playing) pause();
+    setRecordingUI(false);
+    if(!chunks.length){ setStatus('Recording stopped. Nothing captured.'); return; }
+    download(new Blob(chunks,{type: done.mimeType || 'video/webm'}), `${slug(storyboard.title)}${suffix}.${ext}`);
+    setStatus(`Downloaded ${ext.toUpperCase()} recording.`);
+  };
+  stream.getVideoTracks().forEach(t=>t.addEventListener('ended', stopRecording));
+  pausedAt = 0; drawFrame(0);
+  recorder.start(1000);
+  setRecordingUI(true);
+  play();
+  const total = totalSeconds();
+  recordTimer = setInterval(()=>{
+    const t = playing ? (performance.now()-startedAt)/1000 : total;
+    setStatus(`● ${label} ${fmt(t)} / ${fmt(total)}`);
+    if(!playing) setTimeout(stopRecording, 500);
+  }, 250);
+}
+function stopRecording(){ if(recorder && recorder.state !== 'inactive') recorder.stop(); }
+
+function recordCanvas(){
+  if(recorder) return;
+  if(!storyboard) makeStoryboard();
+  if(!window.MediaRecorder){ setStatus('This browser cannot record video (no MediaRecorder).'); return; }
+  const stream = canvas.captureStream(30);
+  const track = narrationTrack();
+  if(track) stream.addTrack(track);
+  startRecorder(stream, '', track ? 'Recording canvas + narration' : 'Recording canvas (browser voice not captured)');
 }
 async function recordTab(){
+  if(recorder) return;
   if(!storyboard) makeStoryboard();
   try{
-    const stream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
-    chunks=[]; recorder=new MediaRecorder(stream,{mimeType:'video/webm'});
-    recorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
-    recorder.onstop=()=>{ stream.getTracks().forEach(t=>t.stop()); const blob=new Blob(chunks,{type:'video/webm'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${slug(storyboard.title)}-tab-voice.webm`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),500); setStatus('Downloaded tab recording.'); };
-    reset(); recorder.start(); play(); setTimeout(()=>{ recorder?.stop(); pause(); }, totalSeconds()*1000+800);
-    setStatus('Recording tab. Choose this tab/window and enable tab audio.');
+    const stream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+    if(!stream.getAudioTracks().length) setStatus('No tab audio shared, so the voice will be missing.');
+    startRecorder(stream, '-tab-voice', 'Recording tab');
   } catch(err){ setStatus('Tab recording cancelled or blocked.'); console.error(err); }
 }
 
@@ -422,11 +804,24 @@ function init(){
   $('loadSampleBtn').onclick=()=>{ $('essayInput').value=SAMPLE_ESSAY; makeStoryboard(); };
   $('generateBtn').onclick=makeStoryboard;
   $('playBtn').onclick=play; $('pauseBtn').onclick=pause; $('resetBtn').onclick=reset;
-  $('recordBtn').onclick=recordCanvas; $('recordTabBtn').onclick=recordTab;
-  $('exportScriptBtn').onclick=exportScript; $('exportJsonBtn').onclick=exportJson;
+  $('recordBtn').onclick=recordCanvas; $('recordTabBtn').onclick=recordTab; $('stopRecordBtn').onclick=stopRecording;
+  $('exportScriptBtn').onclick=exportScript; $('exportJsonBtn').onclick=exportJson; $('exportProjectBtn').onclick=exportProject;
+  $('newProjectBtn').onclick=newProject;
+  $('importBtn').onclick=openImport;
+  $('importCancelBtn').onclick=closeImport;
+  $('importPasteBtn').onclick=()=>importJsonText($('importText').value);
+  $('importFile').onchange=e=>{ importFile(e.target.files[0]); e.target.value=''; };
+  $('audioInput').onchange=e=>loadNarrationAudio(e.target.files[0]);
   $('timeline').oninput=seek; $('testVoiceBtn').onclick=testVoice;
+  $('styleSelect').onchange=()=>{ if(storyboard){ storyboard.style=$('styleSelect').value; if(!playing) drawFrame(pausedAt); scheduleSave(); } };
+  $('toneSelect').onchange=()=>{ if(storyboard){ storyboard.tone=$('toneSelect').value; scheduleSave(); } };
+  $('essayInput').oninput=scheduleSave;
+  ['voiceEnabled','voiceSelect','voiceRate','voicePitch'].forEach(id=>$(id).addEventListener('change',scheduleSave));
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
-  loadVoices(); speechSynthesis.onvoiceschanged=loadVoices;
+  $('actionList').replaceChildren(...ACTIONS.map(a=>el('option',{value:a})));
+  if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+  setRecordingUI(false);
   drawFrame(0);
+  restoreAutosave();
 }
 init();

@@ -1,4 +1,4 @@
-# StickForge v0.1 — How to Use It
+# StickForge v0.3 — How to Use It
 
 StickForge is a local/browser prototype for turning an essay into a crude-but-useful stick-figure explainer video.
 
@@ -21,6 +21,31 @@ Firefox may preview parts of the app, but the tab-recording and audio-capture pa
 4. Choose a visual style and tone.
 5. Click **Generate Scene Plan**.
 6. Click **Play** to preview.
+
+## Better path: import a JSON storyboard
+
+The built-in planner is crude. Let an LLM be the director and StickForge the puppet theater.
+
+1. Give ChatGPT/Claude your essay plus `docs/scene_schema.json`, and ask for a storyboard in that format.
+2. Click **Import JSON Storyboard**.
+3. Paste the reply (code fences and chatter around the JSON are fine), or click **Load File…** for a `.json` file.
+4. Read the status line. Unknown visuals or cameras, out-of-range durations, and off-target runtimes are fixed and reported.
+
+## Editing scenes
+
+Open the **Edit Scenes** tab. Every scene is a card:
+
+- Edit title, seconds, visual, action, camera, on-screen text, and narration. The preview updates live.
+- **▶** jumps the preview to that scene.
+- **↑ / ↓** reorder, **⧉** duplicates, **✕** deletes, **+ Add scene** appends.
+- The summary line shows total runtime against the mode target.
+
+## Saving
+
+- Work autosaves to this browser every time something changes. Reloading the page restores it.
+- **Export Project** downloads essay + voice settings + storyboard as one `-project.json`. Import it on another machine.
+- **Export JSON** downloads just the storyboard.
+- **New Project** clears everything, including the autosave.
 
 ## Ugly voice path: browser voice preview
 
@@ -46,11 +71,20 @@ Because browsers do not easily let normal canvas recording capture text-to-speec
 8. Let the whole video run.
 9. StickForge downloads a `.webm` file.
 
+## Recording with your own narration file (cleanest)
+
+1. Record or generate a voiceover externally (any audio file).
+2. Load it under **Narration audio**. It replaces browser voice during Play.
+3. Match scene durations to the audio. The status line warns when the runtimes differ.
+4. Click **Record WebM**. The narration is mixed straight into the file with no tab sharing.
+
 ## Normal recording without browser voice
 
 Use **Record WebM** when you want to record the canvas directly.
 
-This path may not capture browser text-to-speech. For cleaner production, create a voiceover externally, then use a separate editor or future renderer pipeline.
+Without a narration file this does not capture browser text-to-speech.
+
+While recording, the status line shows elapsed time. **Stop Recording** ends early and still downloads what was captured. Stopping screen share in Chrome also ends a tab recording cleanly.
 
 ## Converting WebM to MP4
 
@@ -77,7 +111,7 @@ ffmpeg -i stickforge_output.webm -c:v libx264 -c:a aac stickforge_output.mp4
 - The built-in scene planner is primitive and rule-based.
 - The visual engine is intentionally simple.
 - Browser TTS quality depends on your system voices.
-- Normal canvas recording does not reliably capture browser text-to-speech.
+- Canvas recording does not capture browser text-to-speech. Use a narration file or tab recording.
 - Tab recording is clunky, but it works.
 - Export format is `.webm`, not `.mp4`.
 - Timing may need manual adjustment for polished videos.

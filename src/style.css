@@ -119,7 +119,40 @@ pre {
   color: #dbe6fa;
 }
 #status { min-height: 24px; color: var(--accent); }
+#status.recording { color: var(--danger); font-weight: 700; }
+#saveState { margin: 0; font-size: 13px; }
+button:disabled { opacity: .45; cursor: not-allowed; border-color: var(--line); }
+button.danger:not(:disabled) { background: #3a1616; border-color: var(--danger); color: #ffb4b4; }
+.fileLabel { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; }
+.fileBtn { display: inline-flex; align-items: center; background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; font-weight: 700; }
+.fileBtn:hover { border-color: var(--accent); }
+
+#editor { margin-top: 12px; max-height: 620px; overflow: auto; display: grid; gap: 10px; }
+.editorHead { display: grid; gap: 4px; }
+#editorSummary { margin: 0; font-size: 13px; }
+#editorSummary.warn { color: var(--danger); }
+.sceneCard { background: #0b1018; border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+.sceneCardHead { display: flex; align-items: center; gap: 8px; }
+.sceneCardHead strong { color: var(--accent); }
+.sceneCardHead input { flex: 1; min-width: 0; }
+.sceneBtns { display: flex; gap: 4px; }
+.sceneBtns button { padding: 6px 9px; }
+.sceneGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.field { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.field input, .field select, .field textarea, .editorHead input, .sceneCardHead input {
+  width: 100%; background: #080b11; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: 14px; margin: 0;
+}
+.field textarea { min-height: 70px; }
+.addScene { justify-self: start; }
+
+dialog { width: min(760px, calc(100vw - 32px)); background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+dialog::backdrop { background: rgba(0,0,0,.6); }
+dialog h2 { margin-top: 0; }
+#importText { min-height: 260px; font-family: ui-monospace, monospace; font-size: 13px; }
+#importError { color: var(--danger); min-height: 20px; margin: 6px 0; }
 @media (max-width: 980px) {
   .layout { grid-template-columns: 1fr; }
   .topbar { align-items: flex-start; flex-direction: column; }
+  .sceneGrid { grid-template-columns: 1fr 1fr; }
+  .sceneCardHead { flex-wrap: wrap; }
 }
