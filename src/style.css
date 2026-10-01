@@ -143,3 +143,4 @@ body.grim h2 { color: #d9c9b6; }
 body.grim button.primary { background: #2a0d0b; color: #f0c2b3; }
 body.grim #timecode, body.grim #status { color: #d4574b; }
 body.grim canvas { background: #000; border-color: #3a2320; }
+.hint { margin: 6px 0 0; }

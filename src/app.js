@@ -126,6 +126,7 @@ function visualTypeFor(i, total, paragraph, tone) {
 
 function makeStoryboard() {
   const text = $('essayInput').value.trim() || SAMPLE_ESSAY;
+  if (/^(```|[\[{])/.test(text)) { importText(text, 'pasted JSON'); return; }
   const modeKey = selected('mode') || 'standard';
   const mode = MODES[modeKey];
   const parts = splitEssay(text);
@@ -178,6 +179,137 @@ function makeStoryboard() {
   renderOutput();
   drawFrame(0);
   setStatus(`Generated ${scenes.length} scenes with motion pass v0.2. ${mode.label} mode. No Shorts.`);
+}
+
+// ---------- JSON import: an outside director (ChatGPT, Codex, a human) writes the storyboard ----------
+const VISUAL_TYPES = ['hook','goblin','sneak','heist','underground','machine','network','console','house','council','choice','map','conflict','idea','closing','gate','road','ruins','omen','pyre'];
+const CAMERAS = ['slow_push','pan','wide','shake','zoom_out','drift'];
+
+function parseJsonLoose(text){
+  // Accept raw JSON or JSON wrapped in a ```json fence (how chat models usually hand it over).
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = (fenced ? fenced[1] : text).trim();
+  if(!/^[\[{]/.test(body)) return null;
+  return JSON.parse(body);
+}
+
+function normalizeStoryboard(raw){
+  const warnings = [];
+  const src = Array.isArray(raw) ? { scenes: raw } : raw;
+  if(!src || typeof src !== 'object' || !Array.isArray(src.scenes) || !src.scenes.length){
+    throw new Error('JSON needs a non-empty "scenes" array.');
+  }
+  const style = ['chalk','blueprint','paper','grimdark'].includes(src.style) ? src.style : $('styleSelect').value;
+  const tone = ['clear','dark','satirical','grimdark'].includes(src.tone) ? src.tone : $('toneSelect').value;
+  const scenes = src.scenes.map((s, i) => {
+    s = s && typeof s === 'object' ? s : { narration: String(s ?? '') };
+    const n = i + 1;
+    const visual = typeof s.visual === 'string' ? { type: s.visual } : { ...(s.visual || {}) };
+    if(!VISUAL_TYPES.includes(visual.type)){
+      const fallback = visualTypeFor(i, src.scenes.length, String(s.narration || ''), tone);
+      if(visual.type) warnings.push(`Scene ${n}: unknown visual "${visual.type}" → ${fallback}`);
+      visual.type = fallback;
+    }
+    visual.action = visual.action || 'reveal';
+    let duration = Number(s.duration);
+    if(!(duration > 0)){ duration = 20; warnings.push(`Scene ${n}: missing duration → 20s`); }
+    const narration = String(s.narration || '');
+    return {
+      ...s,
+      id: s.id || `scene_${String(n).padStart(2,'0')}`,
+      index: n,
+      title: String(s.title || (i === 0 ? 'Hook' : `Beat ${n}`)),
+      duration: Math.min(600, Math.round(duration)),
+      narration,
+      onscreenText: String(s.onscreenText ?? s.text ?? (narration ? keywordLine(narration) : '')),
+      visual,
+      camera: CAMERAS.includes(s.camera) ? s.camera : CAMERAS[i % CAMERAS.length],
+      retentionBeat: String(s.retentionBeat || 'Imported scene.')
+    };
+  });
+  const sb = {
+    ...src,
+    schema: src.schema || 'stickforge.storyboard.v0.2',
+    title: String(src.title || titleFrom(scenes[0].narration || 'Imported StickForge Project')),
+    mode: src.mode || 'imported',
+    tone, style, scenes,
+    targetSeconds: Number(src.targetSeconds) || scenes.reduce((a,s)=>a+s.duration,0),
+    actualSeconds: scenes.reduce((a,s)=>a+s.duration,0),
+    aspectRatio: '16:9',
+    noShorts: true
+  };
+  return { storyboard: sb, warnings };
+}
+
+function loadStoryboard(raw, source){
+  const { storyboard: sb, warnings } = normalizeStoryboard(raw);
+  pause();
+  storyboard = sb;
+  $('styleSelect').value = sb.style; $('toneSelect').value = sb.tone; syncTheme();
+  pausedAt = 0; renderOutput(); drawFrame(0);
+  const note = warnings.length ? ` ${warnings.length} fix-up(s): ${warnings.slice(0,3).join('; ')}${warnings.length>3?'…':''}` : '';
+  setStatus(`Imported ${sb.scenes.length} scenes from ${source} (${fmt(sb.actualSeconds)}).${note}`);
+  if(warnings.length) console.warn('StickForge import fix-ups:', warnings);
+}
+
+function importText(text, source){
+  try{
+    const raw = parseJsonLoose(text);
+    if(!raw) throw new Error('That is not JSON.');
+    loadStoryboard(raw, source);
+    return true;
+  } catch(err){ setStatus(`Import failed: ${err.message}`); console.error(err); return false; }
+}
+
+function importFile(file){
+  if(!file) return;
+  file.text().then(t => importText(t, file.name));
+}
+
+function directorPrompt(){
+  const essay = $('essayInput').value.trim() || SAMPLE_ESSAY;
+  const mode = MODES[selected('mode') || 'standard'];
+  return `You are the director for StickForge, a crude stick-figure explainer animator.
+Turn the essay below into a storyboard. Reply with ONLY a JSON object in a \`\`\`json block.
+
+Target: ${mode.scenes} scenes, about ${mode.seconds} seconds total (${mode.label} mode: ${mode.goal}). 16:9, never Shorts.
+Tone: ${$('toneSelect').value}. Style: ${$('styleSelect').value}.
+
+Shape:
+{
+  "title": "...",
+  "tone": "${$('toneSelect').value}",
+  "style": "${$('styleSelect').value}",
+  "scenes": [
+    {
+      "title": "short scene title",
+      "duration": 30,
+      "narration": "what the voice says, written for the ear",
+      "onscreenText": "max ~8 words on screen",
+      "visual": { "type": "one of the types below", "action": "reveal" },
+      "camera": "one of: ${CAMERAS.join(', ')}",
+      "retentionBeat": "why the viewer keeps watching"
+    }
+  ]
+}
+
+Visual types (pick the one that best stages the idea):
+hook (big question), closing (final line), idea (lightbulb), choice (fork in the road),
+map, conflict (two figures clash), council (power/law/vote), house (homes/households/bills),
+machine, network, console (tech/systems), goblin, sneak, heist, underground (hidden actors/loot),
+gate, road, ruins, omen, pyre (grimdark set pieces).
+
+Rules: one idea per scene, first scene must justify the video in 20 seconds,
+escalate at the midpoint, end on a memorable line rather than a call to action.
+
+ESSAY:
+${essay}`;
+}
+
+async function copyDirectorPrompt(){
+  const text = directorPrompt();
+  try{ await navigator.clipboard.writeText(text); setStatus('Director prompt copied. Paste it into ChatGPT/Claude, then paste the JSON reply back here and Generate.'); }
+  catch{ download(text, 'stickforge-director-prompt.txt'); setStatus('Clipboard blocked — downloaded the director prompt instead.'); }
 }
 
 function totalSeconds(){ return storyboard ? storyboard.scenes.reduce((a,s)=>a+s.duration,0) : 0; }
@@ -636,6 +768,14 @@ function init(){
   $('playBtn').onclick=play; $('pauseBtn').onclick=pause; $('resetBtn').onclick=reset;
   $('recordBtn').onclick=recordCanvas; $('recordTabBtn').onclick=recordTab;
   $('exportScriptBtn').onclick=exportScript; $('exportJsonBtn').onclick=exportJson;
+  $('importJsonBtn').onclick=()=>$('jsonFileInput').click();
+  $('jsonFileInput').onchange=(e)=>{ importFile(e.target.files[0]); e.target.value=''; };
+  $('directorPromptBtn').onclick=copyDirectorPrompt;
+  document.addEventListener('dragover', e=>{ if([...e.dataTransfer.items].some(i=>i.kind==='file')) e.preventDefault(); });
+  document.addEventListener('drop', e=>{
+    const f=[...e.dataTransfer.files].find(f=>/\.json$/i.test(f.name) || f.type==='application/json');
+    if(f){ e.preventDefault(); importFile(f); }
+  });
   $('timeline').oninput=seek; $('testVoiceBtn').onclick=testVoice;
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
   loadVoices(); speechSynthesis.onvoiceschanged=loadVoices;
