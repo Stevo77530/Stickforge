@@ -729,10 +729,12 @@ function animate(){
   if(!playing) return;
   const t=(performance.now()-startedAt)/1000;
   if(t>=totalSeconds()){ pause(); drawFrame(totalSeconds()); return; }
-  drawFrame(t); raf=requestAnimationFrame(animate);
+  speakScene(t); drawFrame(t); raf=requestAnimationFrame(animate);
 }
-function play(){ if(!storyboard) makeStoryboard(); playing=true; startedAt=performance.now()-pausedAt*1000; speakAll(); animate(); setStatus('Playing motion pass v0.2.'); }
-function pause(){ playing=false; cancelAnimationFrame(raf); pausedAt=Number($('timeline').value)/1000*totalSeconds(); speechSynthesis.cancel(); setStatus('Paused.'); }
+function syncPlayButton(){ $('bigPlayBtn').hidden = playing; }
+function togglePlay(){ playing ? pause() : play(); }
+function play(){ if(!storyboard) makeStoryboard(); if(pausedAt>=totalSeconds()) pausedAt=0; playing=true; syncPlayButton(); startedAt=performance.now()-pausedAt*1000; spokenScene=null; speechSynthesis.cancel(); speakScene(pausedAt); animate(); setStatus('Playing motion pass v0.2.'); }
+function pause(){ playing=false; syncPlayButton(); cancelAnimationFrame(raf); pausedAt=Number($('timeline').value)/1000*totalSeconds(); speechSynthesis.cancel(); setStatus('Paused.'); }
 function reset(){ pause(); pausedAt=0; drawFrame(0); }
 function seek(){ pausedAt=Number($('timeline').value)/1000*totalSeconds(); drawFrame(pausedAt); }
 
@@ -756,7 +758,15 @@ function speak(text){
   const u=new SpeechSynthesisUtterance(text); const v=selectedVoice(); if(v) u.voice=v;
   u.rate=Number($('voiceRate').value); u.pitch=Number($('voicePitch').value); speechSynthesis.speak(u);
 }
-function speakAll(){ if(!$('voiceEnabled').checked || !storyboard) return; speechSynthesis.cancel(); speak(scriptText().replace(/## .*\n/g,'')); }
+// Narrate scene by scene so the voice stays with the pictures (queued, so a slow voice is never cut off).
+// The first call comes from play()'s click, which mobile browsers require before speech is allowed.
+let spokenScene=null;
+function speakScene(t){
+  if(!storyboard) return;
+  const {scene}=sceneAt(clamp(t,0,totalSeconds()));
+  if(scene.index===spokenScene) return;
+  spokenScene=scene.index; speak(scene.narration);
+}
 function testVoice(){ speechSynthesis.cancel(); speak('StickForge voice test. It sounds ugly, but the goblin speaks. Now with more movement.'); }
 
 function download(text,name,type='text/plain'){
@@ -794,7 +804,7 @@ function init(){
   $('styleSelect').onchange=()=>{ syncTheme(); if(storyboard){ storyboard.style=$('styleSelect').value; } drawFrame(pausedAt); };
   $('toneSelect').onchange=()=>{ if(storyboard) setStatus('Tone changed. Regenerate the scene plan to apply it.'); };
   $('generateBtn').onclick=makeStoryboard;
-  $('playBtn').onclick=play; $('pauseBtn').onclick=pause; $('resetBtn').onclick=reset;
+  $('playBtn').onclick=play; $('bigPlayBtn').onclick=play; canvas.onclick=togglePlay; $('pauseBtn').onclick=pause; $('resetBtn').onclick=reset;
   $('recordBtn').onclick=recordCanvas; $('recordTabBtn').onclick=recordTab;
   $('exportScriptBtn').onclick=exportScript; $('exportJsonBtn').onclick=exportJson;
   $('importJsonBtn').onclick=()=>$('jsonFileInput').click();

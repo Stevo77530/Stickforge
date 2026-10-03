@@ -144,3 +144,8 @@ body.grim button.primary { background: #2a0d0b; color: #f0c2b3; }
 body.grim #timecode, body.grim #status { color: #d4574b; }
 body.grim canvas { background: #000; border-color: #3a2320; }
 .hint { margin: 6px 0 0; }
+
+.stageWrap { position: relative; }
+.stageWrap canvas { cursor: pointer; }
+.bigPlay { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 1.4rem; padding: 14px 28px; border-radius: 999px; border: 2px solid currentColor; background: rgba(0,0,0,.7); color: #fff; cursor: pointer; }
+.bigPlay:focus-visible { outline: 3px solid #f1b84b; outline-offset: 3px; }

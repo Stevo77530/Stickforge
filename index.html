@@ -86,7 +86,10 @@
         </div>
         <span id="timecode">00:00 / 00:00</span>
       </div>
-      <canvas id="stage" width="1280" height="720"></canvas>
+      <div class="stageWrap">
+        <canvas id="stage" width="1280" height="720"></canvas>
+        <button id="bigPlayBtn" class="bigPlay" aria-label="Play">&#9654; Play</button>
+      </div>
       <input id="timeline" type="range" min="0" max="1000" value="0" />
       <div class="tabs">
         <button class="tab active" data-tab="storyboard">Storyboard</button>
