@@ -24,6 +24,12 @@
         <button id="loadGrimBtn" class="grimBtn">Wild Side (Grimdark)</button>
         <button id="generateBtn" class="primary">Generate Scene Plan</button>
       </div>
+      <div class="row wrap">
+        <button id="directorPromptBtn">Copy Director Prompt</button>
+        <button id="importJsonBtn">Import JSON</button>
+        <input id="jsonFileInput" type="file" accept=".json,application/json" hidden />
+      </div>
+      <p class="hint"><small>Want a smarter plan? Copy the director prompt into a chat model, then paste its JSON reply above (or drop a .json file anywhere) and hit Generate.</small></p>
 
       <h2>2. Mode</h2>
       <div class="grid3">
@@ -80,7 +86,10 @@
         </div>
         <span id="timecode">00:00 / 00:00</span>
       </div>
-      <canvas id="stage" width="1280" height="720"></canvas>
+      <div class="stageWrap">
+        <canvas id="stage" width="1280" height="720"></canvas>
+        <button id="bigPlayBtn" class="bigPlay" aria-label="Play">&#9654; Play</button>
+      </div>
       <input id="timeline" type="range" min="0" max="1000" value="0" />
       <div class="tabs">
         <button class="tab active" data-tab="storyboard">Storyboard</button>

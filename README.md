@@ -24,6 +24,9 @@ Recommended browser: Chrome or Edge.
 - Tab recording path for voice capture
 - Export narration script
 - Export storyboard JSON
+- Import storyboard JSON (file, drag-and-drop, or paste — fenced ```json replies work)
+- Open a saved storyboard by link: `index.html?storyboard=samples/twig_has_snapped_storyboard.json`
+- Copy Director Prompt: hands the essay + scene vocabulary to a chat model so it can write the storyboard
 - Record WebM video
 
 ## Grimdark Ash

@@ -1,0 +1,240 @@
+{
+  "schema": "stickforge.storyboard.v0.2",
+  "title": "The Twig Has Already Snapped",
+  "tone": "grimdark",
+  "style": "grimdark",
+  "mode": "standard",
+  "scenes": [
+    {
+      "title": "The Old Rule",
+      "duration": 12,
+      "narration": "There is an old rule in the woods: if every bird has suddenly stopped singing, don't be the first thing to make a sound.",
+      "onscreenText": "DON'T BE THE FIRST THING TO MAKE A SOUND",
+      "visual": {
+        "type": "road",
+        "action": "reveal",
+        "labels": {
+          "bubble": "don't be the first sound"
+        }
+      },
+      "camera": "slow_push",
+      "retentionBeat": "Open on the rule. Make them hold their breath."
+    },
+    {
+      "title": "Something Is Here",
+      "duration": 28,
+      "narration": "Every child has walked through a forest. At first, it feels alive. Birds chatter overhead. Insects hum beneath fallen leaves. Wind moves through the branches like distant surf. Then, something changes. Without warning, everything stops. The birds disappear. The insects fall silent. The quiet becomes so complete that you hear your own breathing, the blood rushing in your ears. Something is here.",
+      "onscreenText": "THE FOREST WENT QUIET",
+      "visual": {
+        "type": "road",
+        "action": "witness",
+        "labels": {
+          "bubble": "something is here"
+        }
+      },
+      "camera": "drift",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "The Loudest Thing",
+      "duration": 12,
+      "narration": "The forest has not become empty. It has become afraid. Nature has always understood a simple, unforgiving law: the loudest thing dies first.",
+      "onscreenText": "THE LOUDEST THING DIES FIRST",
+      "visual": {
+        "type": "omen",
+        "action": "witness",
+        "labels": {
+          "sign": "THE LAW"
+        }
+      },
+      "camera": "slow_push",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "The Night Watch",
+      "duration": 39,
+      "narration": "It is an instinct we carry in our marrow, even if we pretend to have outgrown it. Anyone who has ever stood a long watch in the dead of night, staring out over pitch-black water with only the low, vibrating thrum of an engine beneath their boots, knows the feeling. When you are swallowed by the dark, and you suddenly see an unknown light on the horizon, your first impulse isn't to wave. It is to brace. You don't know who they are. You don't know what they need.",
+      "onscreenText": "YOUR FIRST IMPULSE ISN'T TO WAVE. IT IS TO BRACE.",
+      "visual": {
+        "type": "sea",
+        "action": "witness",
+        "labels": {
+          "sign": "UNKNOWN LIGHT"
+        }
+      },
+      "camera": "drift",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "Where Is Everyone?",
+      "duration": 30,
+      "narration": "Now lift your eyes from the treeline and the water. Look at the night sky. Humanity has spent generations pointing massive dishes at the stars, asking one question: where is everyone? With billions of galaxies, each holding billions of suns, the universe is ancient, vast, and overflowing with the raw materials for life. It should be deafening. It should be a chaotic riot of radio waves and empire-building.",
+      "onscreenText": "IT SHOULD BE DEAFENING",
+      "visual": {
+        "type": "sky",
+        "action": "witness",
+        "labels": {
+          "bubble": "where is everyone?",
+          "sign": "BILLIONS OF SUNS"
+        }
+      },
+      "camera": "zoom_out",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "The Wrong Question",
+      "duration": 12,
+      "narration": "Instead, it is a perfect, dead vacuum. We have been asking the wrong question. Not where is everyone, but why would anyone answer?",
+      "onscreenText": "NOT \"WHERE IS EVERYONE?\" — \"WHY WOULD ANYONE ANSWER?\"",
+      "visual": {
+        "type": "sky",
+        "action": "witness",
+        "labels": {
+          "bubble": "why would anyone answer?",
+          "sign": "DEAD VACUUM"
+        }
+      },
+      "camera": "slow_push",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "The Cold Math",
+      "duration": 33,
+      "narration": "This is not a thought experiment; it is the cold math of game theory. Every living thing is driven to expand, but resources are strictly finite. When two unknown entities detect each other across an insurmountable gulf, communication is impossible. You cannot verify their intentions. By the time a message crosses the light-years, a primitive world could have triggered a technological explosion, turning them from a curiosity into a competitor for the same scarce fuel.",
+      "onscreenText": "FINITE FUEL • UNKNOWN INTENTIONS",
+      "visual": {
+        "type": "conflict",
+        "action": "witness",
+        "labels": {
+          "sign": "NO WAY TO VERIFY"
+        }
+      },
+      "camera": "pan",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "The Chain of Suspicion",
+      "duration": 17,
+      "narration": "In the dark, there is no trust. There is only the chain of suspicion. If you announce your presence to ask if they are friendly, you give them your exact coordinates. You hand them the knife.",
+      "onscreenText": "SAY HELLO = HAND THEM THE KNIFE",
+      "visual": {
+        "type": "choice",
+        "action": "witness",
+        "labels": {
+          "a": "CALL OUT",
+          "b": "STAY DARK"
+        }
+      },
+      "camera": "shake",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "One Apex Predator",
+      "duration": 23,
+      "narration": "Striking first isn't an act of malice; it is a mathematical necessity. The universe doesn't need to be teeming with monsters to be terrifying. It only takes one apex predator. And when a hunter hears a twig snap in the dark, it does not call out to introduce itself. It acts.",
+      "onscreenText": "IT ONLY TAKES ONE",
+      "visual": {
+        "type": "goblin",
+        "action": "witness",
+        "labels": {
+          "crate": "PREY",
+          "bubble": "it does not call out. it acts."
+        }
+      },
+      "camera": "slow_push",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "Perfect Camouflage",
+      "duration": 9,
+      "narration": "The ultimate evolutionary advantage of an advanced civilization isn't conquest or faster-than-light travel. It is perfect camouflage.",
+      "onscreenText": "THE REAL ADVANTAGE: PERFECT CAMOUFLAGE",
+      "visual": {
+        "type": "ruins",
+        "action": "witness",
+        "labels": {
+          "sign": "HIDE OR DIE"
+        }
+      },
+      "camera": "zoom_out",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "The Toddler With a Drum",
+      "duration": 34,
+      "narration": "And then there is us. We are the toddler wandering into the deepest, oldest part of the woods, banging a drum. In the 1970s, humanity launched the Voyager probes into the deep dark, attaching golden records etched with a map to our home sun, our biology, and greetings in fifty-five languages. Space is too vast for those tiny discs to ever be intercepted; mathematically, they are a speck of dust in a hurricane, destined to drift unseen forever.",
+      "onscreenText": "55 LANGUAGES • ONE MAP HOME",
+      "visual": {
+        "type": "hook",
+        "action": "witness",
+        "labels": {
+          "machine": "GOLDEN RECORD",
+          "bubble": "hello! we're over here!"
+        }
+      },
+      "camera": "pan",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "A Map to Our Own Throat",
+      "duration": 32,
+      "narration": "But the physical disc isn't the threat. The threat is the psychology that built it. It is a monument to our profound, suicidal naivety. We assume that if something hears us, it will come with open hands. But if we are the kind of species foolish enough to draw a map to our own throat and throw it into the dark, we are exactly the kind of prey the forest consumes.",
+      "onscreenText": "A MAP TO OUR OWN THROAT",
+      "visual": {
+        "type": "omen",
+        "action": "witness",
+        "labels": {
+          "sign": "NAIVETY"
+        }
+      },
+      "camera": "slow_push",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "Going Dark",
+      "duration": 22,
+      "narration": "Perhaps we are finally waking up. Perhaps we understand the math now. We could shut down our transmitters. We could go dark, hunker down, and try to blend into the black like the rest of the surviving universe. But it wouldn't matter. The dark has older rules than regret.",
+      "onscreenText": "WE COULD GO DARK. IT WOULDN'T MATTER.",
+      "visual": {
+        "type": "gate",
+        "action": "witness",
+        "labels": {
+          "sign": "OLDER RULES THAN REGRET"
+        }
+      },
+      "camera": "drift",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "The Twig Has Snapped",
+      "duration": 21,
+      "narration": "While the golden records drift harmlessly, our earliest radio waves, our television broadcasts, and our military radar pings have already been traveling outward at the speed of light for eight decades. An invisible sphere of noise, expanding mercilessly through the void. The twig has already snapped.",
+      "onscreenText": "AN INVISIBLE SPHERE OF NOISE",
+      "visual": {
+        "type": "sky",
+        "action": "broadcast",
+        "labels": {
+          "bubble": "80 years of noise",
+          "sign": "THE TWIG HAS SNAPPED"
+        }
+      },
+      "camera": "zoom_out",
+      "retentionBeat": "One fear per scene."
+    },
+    {
+      "title": "Breathing Out Loud",
+      "duration": 24,
+      "narration": "Tonight, step outside. Look up. Ask humanity's oldest question. Then listen carefully. The answer has been there all along, woven into the freezing black. The silence is the answer. It is the sound of a billion civilizations holding their breath. And we are the only ones still breathing out loud, waiting for the echo.",
+      "onscreenText": "WE ARE THE ONLY ONES STILL BREATHING OUT LOUD",
+      "visual": {
+        "type": "pyre",
+        "action": "witness",
+        "labels": {
+          "headline": "THE SILENCE IS THE ANSWER"
+        }
+      },
+      "camera": "slow_push",
+      "retentionBeat": "End on the image, not a request."
+    }
+  ]
+}

@@ -15,9 +15,15 @@ Recommended first essay candidates:
 3. EPCOT / subscription city essay
 4. AI likeness licensing essay
 
-## Next build feature: JSON import
+## JSON import (shipped)
 
-The most important missing feature is JSON import. That lets ChatGPT/Codex become the true director while the browser app remains the puppet theater.
+JSON import is in. ChatGPT/Codex/Claude can now be the director while the browser app stays the puppet theater:
+
+1. Paste the essay, click **Copy Director Prompt**.
+2. Paste the prompt into a chat model.
+3. Paste its JSON reply into the input box and click **Generate** (or **Import JSON** / drop a `.json` file).
+
+Imports are forgiving: unknown visual types fall back to the rule-based pick, missing durations default to 20s, and every fix-up is reported in the status line.
 
 ## Better technical architecture later
 
