@@ -7,7 +7,7 @@
   "scenes": [
     {
       "title": "The Old Rule",
-      "duration": 12,
+      "duration": 9,
       "narration": "There is an old rule in the woods: if every bird has suddenly stopped singing, don't be the first thing to make a sound.",
       "onscreenText": "DON'T BE THE FIRST THING TO MAKE A SOUND",
       "visual": {
@@ -22,7 +22,7 @@
     },
     {
       "title": "Something Is Here",
-      "duration": 28,
+      "duration": 27,
       "narration": "Every child has walked through a forest. At first, it feels alive. Birds chatter overhead. Insects hum beneath fallen leaves. Wind moves through the branches like distant surf. Then, something changes. Without warning, everything stops. The birds disappear. The insects fall silent. The quiet becomes so complete that you hear your own breathing, the blood rushing in your ears. Something is here.",
       "onscreenText": "THE FOREST WENT QUIET",
       "visual": {
@@ -52,7 +52,7 @@
     },
     {
       "title": "The Night Watch",
-      "duration": 39,
+      "duration": 28,
       "narration": "It is an instinct we carry in our marrow, even if we pretend to have outgrown it. Anyone who has ever stood a long watch in the dead of night, staring out over pitch-black water with only the low, vibrating thrum of an engine beneath their boots, knows the feeling. When you are swallowed by the dark, and you suddenly see an unknown light on the horizon, your first impulse isn't to wave. It is to brace. You don't know who they are. You don't know what they need.",
       "onscreenText": "YOUR FIRST IMPULSE ISN'T TO WAVE. IT IS TO BRACE.",
       "visual": {
@@ -67,7 +67,7 @@
     },
     {
       "title": "Where Is Everyone?",
-      "duration": 30,
+      "duration": 28,
       "narration": "Now lift your eyes from the treeline and the water. Look at the night sky. Humanity has spent generations pointing massive dishes at the stars, asking one question: where is everyone? With billions of galaxies, each holding billions of suns, the universe is ancient, vast, and overflowing with the raw materials for life. It should be deafening. It should be a chaotic riot of radio waves and empire-building.",
       "onscreenText": "IT SHOULD BE DEAFENING",
       "visual": {
@@ -83,7 +83,7 @@
     },
     {
       "title": "The Wrong Question",
-      "duration": 12,
+      "duration": 11,
       "narration": "Instead, it is a perfect, dead vacuum. We have been asking the wrong question. Not where is everyone, but why would anyone answer?",
       "onscreenText": "NOT \"WHERE IS EVERYONE?\" — \"WHY WOULD ANYONE ANSWER?\"",
       "visual": {
@@ -99,7 +99,7 @@
     },
     {
       "title": "The Cold Math",
-      "duration": 33,
+      "duration": 31,
       "narration": "This is not a thought experiment; it is the cold math of game theory. Every living thing is driven to expand, but resources are strictly finite. When two unknown entities detect each other across an insurmountable gulf, communication is impossible. You cannot verify their intentions. By the time a message crosses the light-years, a primitive world could have triggered a technological explosion, turning them from a curiosity into a competitor for the same scarce fuel.",
       "onscreenText": "FINITE FUEL • UNKNOWN INTENTIONS",
       "visual": {
@@ -114,7 +114,7 @@
     },
     {
       "title": "The Chain of Suspicion",
-      "duration": 17,
+      "duration": 14,
       "narration": "In the dark, there is no trust. There is only the chain of suspicion. If you announce your presence to ask if they are friendly, you give them your exact coordinates. You hand them the knife.",
       "onscreenText": "SAY HELLO = HAND THEM THE KNIFE",
       "visual": {
@@ -130,7 +130,7 @@
     },
     {
       "title": "One Apex Predator",
-      "duration": 23,
+      "duration": 21,
       "narration": "Striking first isn't an act of malice; it is a mathematical necessity. The universe doesn't need to be teeming with monsters to be terrifying. It only takes one apex predator. And when a hunter hears a twig snap in the dark, it does not call out to introduce itself. It acts.",
       "onscreenText": "IT ONLY TAKES ONE",
       "visual": {
@@ -146,7 +146,7 @@
     },
     {
       "title": "Perfect Camouflage",
-      "duration": 9,
+      "duration": 12,
       "narration": "The ultimate evolutionary advantage of an advanced civilization isn't conquest or faster-than-light travel. It is perfect camouflage.",
       "onscreenText": "THE REAL ADVANTAGE: PERFECT CAMOUFLAGE",
       "visual": {
@@ -161,7 +161,7 @@
     },
     {
       "title": "The Toddler With a Drum",
-      "duration": 34,
+      "duration": 30,
       "narration": "And then there is us. We are the toddler wandering into the deepest, oldest part of the woods, banging a drum. In the 1970s, humanity launched the Voyager probes into the deep dark, attaching golden records etched with a map to our home sun, our biology, and greetings in fifty-five languages. Space is too vast for those tiny discs to ever be intercepted; mathematically, they are a speck of dust in a hurricane, destined to drift unseen forever.",
       "onscreenText": "55 LANGUAGES • ONE MAP HOME",
       "visual": {
@@ -177,7 +177,7 @@
     },
     {
       "title": "A Map to Our Own Throat",
-      "duration": 32,
+      "duration": 25,
       "narration": "But the physical disc isn't the threat. The threat is the psychology that built it. It is a monument to our profound, suicidal naivety. We assume that if something hears us, it will come with open hands. But if we are the kind of species foolish enough to draw a map to our own throat and throw it into the dark, we are exactly the kind of prey the forest consumes.",
       "onscreenText": "A MAP TO OUR OWN THROAT",
       "visual": {
@@ -192,7 +192,7 @@
     },
     {
       "title": "Going Dark",
-      "duration": 22,
+      "duration": 20,
       "narration": "Perhaps we are finally waking up. Perhaps we understand the math now. We could shut down our transmitters. We could go dark, hunker down, and try to blend into the black like the rest of the surviving universe. But it wouldn't matter. The dark has older rules than regret.",
       "onscreenText": "WE COULD GO DARK. IT WOULDN'T MATTER.",
       "visual": {
@@ -207,7 +207,7 @@
     },
     {
       "title": "The Twig Has Snapped",
-      "duration": 21,
+      "duration": 22,
       "narration": "While the golden records drift harmlessly, our earliest radio waves, our television broadcasts, and our military radar pings have already been traveling outward at the speed of light for eight decades. An invisible sphere of noise, expanding mercilessly through the void. The twig has already snapped.",
       "onscreenText": "AN INVISIBLE SPHERE OF NOISE",
       "visual": {
@@ -223,7 +223,7 @@
     },
     {
       "title": "Breathing Out Loud",
-      "duration": 24,
+      "duration": 25,
       "narration": "Tonight, step outside. Look up. Ask humanity's oldest question. Then listen carefully. The answer has been there all along, woven into the freezing black. The silence is the answer. It is the sound of a billion civilizations holding their breath. And we are the only ones still breathing out loud, waiting for the echo.",
       "onscreenText": "WE ARE THE ONLY ONES STILL BREATHING OUT LOUD",
       "visual": {
@@ -236,5 +236,7 @@
       "camera": "slow_push",
       "retentionBeat": "End on the image, not a request."
     }
-  ]
+  ],
+  "audio": "samples/twig_has_snapped_narration.mp3",
+  "narrator": "Kokoro TTS, voice bm_george"
 }

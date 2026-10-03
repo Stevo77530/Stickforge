@@ -25,6 +25,7 @@ Recommended browser: Chrome or Edge.
 - Export narration script
 - Export storyboard JSON
 - Import storyboard JSON (file, drag-and-drop, or paste — fenced ```json replies work)
+- Recorded narration: a storyboard's `audio` field (or the audio file picker) plays a real voice track instead of browser TTS
 - Open a saved storyboard by link: `index.html?storyboard=samples/twig_has_snapped_storyboard.json`
 - Copy Director Prompt: hands the essay + scene vocabulary to a chat model so it can write the storyboard
 - Record WebM video

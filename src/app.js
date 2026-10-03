@@ -245,6 +245,7 @@ function loadStoryboard(raw, source){
   const { storyboard: sb, warnings } = normalizeStoryboard(raw);
   pause();
   storyboard = sb;
+  setNarration(sb.audio || null);
   $('styleSelect').value = sb.style; $('toneSelect').value = sb.tone; syncTheme();
   pausedAt = 0; renderOutput(); drawFrame(0);
   const note = warnings.length ? ` ${warnings.length} fix-up(s): ${warnings.slice(0,3).join('; ')}${warnings.length>3?'…':''}` : '';
@@ -733,8 +734,21 @@ function animate(){
 }
 function syncPlayButton(){ $('bigPlayBtn').hidden = playing; }
 function togglePlay(){ playing ? pause() : play(); }
-function play(){ if(!storyboard) makeStoryboard(); if(pausedAt>=totalSeconds()) pausedAt=0; playing=true; syncPlayButton(); startedAt=performance.now()-pausedAt*1000; spokenScene=null; animate(); stopSpeech(); speakScene(pausedAt); setStatus(TTS ? 'Playing.' : 'Playing without narration: this browser has no built-in voice. Open in Chrome or Edge to hear it.'); }
-function pause(){ playing=false; syncPlayButton(); cancelAnimationFrame(raf); pausedAt=Number($('timeline').value)/1000*totalSeconds(); stopSpeech(); setStatus('Paused.'); }
+// A recorded narration track (storyboard.audio or the Audio file picker) beats browser TTS when present.
+let narration=null;
+function setNarration(src){ narration?.pause(); narration = src ? Object.assign(new Audio(src), { preload:'auto' }) : null; }
+function play(){
+  if(!storyboard) makeStoryboard(); if(pausedAt>=totalSeconds()) pausedAt=0;
+  playing=true; syncPlayButton(); startedAt=performance.now()-pausedAt*1000; spokenScene=null; animate(); stopSpeech();
+  if(narration){
+    try{ narration.currentTime=pausedAt; } catch{}
+    narration.play().then(()=>setStatus('Playing with narration.')).catch(err=>{ console.warn(err); setStatus('Sound was blocked. Tap pause, then Play again.'); });
+    return;
+  }
+  speakScene(pausedAt);
+  setStatus(TTS ? 'Playing.' : 'Playing without narration: this browser has no built-in voice. Open in Chrome or Edge to hear it.');
+}
+function pause(){ playing=false; syncPlayButton(); cancelAnimationFrame(raf); pausedAt=Number($('timeline').value)/1000*totalSeconds(); stopSpeech(); narration?.pause(); setStatus('Paused.'); }
 function reset(){ pause(); pausedAt=0; drawFrame(0); }
 function seek(){ pausedAt=Number($('timeline').value)/1000*totalSeconds(); drawFrame(pausedAt); }
 
@@ -809,6 +823,7 @@ function init(){
   $('styleSelect').onchange=()=>{ syncTheme(); if(storyboard){ storyboard.style=$('styleSelect').value; } drawFrame(pausedAt); };
   $('toneSelect').onchange=()=>{ if(storyboard) setStatus('Tone changed. Regenerate the scene plan to apply it.'); };
   $('generateBtn').onclick=makeStoryboard;
+  $('audioInput').onchange=(e)=>{ const f=e.target.files[0]; if(!f) return; pause(); setNarration(URL.createObjectURL(f)); setStatus(`Narration track: ${f.name}. Press Play.`); };
   $('playBtn').onclick=play; $('bigPlayBtn').onclick=play; canvas.onclick=togglePlay; $('pauseBtn').onclick=pause; $('resetBtn').onclick=reset;
   $('recordBtn').onclick=recordCanvas; $('recordTabBtn').onclick=recordTab;
   $('exportScriptBtn').onclick=exportScript; $('exportJsonBtn').onclick=exportJson;
