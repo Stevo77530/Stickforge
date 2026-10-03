@@ -733,8 +733,8 @@ function animate(){
 }
 function syncPlayButton(){ $('bigPlayBtn').hidden = playing; }
 function togglePlay(){ playing ? pause() : play(); }
-function play(){ if(!storyboard) makeStoryboard(); if(pausedAt>=totalSeconds()) pausedAt=0; playing=true; syncPlayButton(); startedAt=performance.now()-pausedAt*1000; spokenScene=null; speechSynthesis.cancel(); speakScene(pausedAt); animate(); setStatus('Playing motion pass v0.2.'); }
-function pause(){ playing=false; syncPlayButton(); cancelAnimationFrame(raf); pausedAt=Number($('timeline').value)/1000*totalSeconds(); speechSynthesis.cancel(); setStatus('Paused.'); }
+function play(){ if(!storyboard) makeStoryboard(); if(pausedAt>=totalSeconds()) pausedAt=0; playing=true; syncPlayButton(); startedAt=performance.now()-pausedAt*1000; spokenScene=null; animate(); stopSpeech(); speakScene(pausedAt); setStatus(TTS ? 'Playing.' : 'Playing without narration: this browser has no built-in voice. Open in Chrome or Edge to hear it.'); }
+function pause(){ playing=false; syncPlayButton(); cancelAnimationFrame(raf); pausedAt=Number($('timeline').value)/1000*totalSeconds(); stopSpeech(); setStatus('Paused.'); }
 function reset(){ pause(); pausedAt=0; drawFrame(0); }
 function seek(){ pausedAt=Number($('timeline').value)/1000*totalSeconds(); drawFrame(pausedAt); }
 
@@ -748,15 +748,20 @@ function renderOutput(){
 }
 function tab(name){ activeTab=name; document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name)); if(storyboard) renderOutput(); }
 
+// Browser voice is optional: some in-app browsers have none, and the video must still play without it.
+const TTS = window.speechSynthesis || null;
+function stopSpeech(){ try{ TTS?.cancel(); } catch{} }
 function loadVoices(){
-  voices = speechSynthesis.getVoices();
+  voices = TTS ? TTS.getVoices() : [];
   $('voiceSelect').innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name} — ${v.lang}</option>`).join('');
 }
 function selectedVoice(){ return voices[Number($('voiceSelect').value)] || null; }
 function speak(text){
-  if(!$('voiceEnabled').checked || !('speechSynthesis' in window)) return;
-  const u=new SpeechSynthesisUtterance(text); const v=selectedVoice(); if(v) u.voice=v;
-  u.rate=Number($('voiceRate').value); u.pitch=Number($('voicePitch').value); speechSynthesis.speak(u);
+  if(!$('voiceEnabled').checked || !TTS || !window.SpeechSynthesisUtterance) return;
+  try{
+    const u=new SpeechSynthesisUtterance(text); const v=selectedVoice(); if(v) u.voice=v;
+    u.rate=Number($('voiceRate').value); u.pitch=Number($('voicePitch').value); TTS.speak(u);
+  } catch(err){ console.warn('Voice unavailable:', err); }
 }
 // Narrate scene by scene so the voice stays with the pictures (queued, so a slow voice is never cut off).
 // The first call comes from play()'s click, which mobile browsers require before speech is allowed.
@@ -767,7 +772,7 @@ function speakScene(t){
   if(scene.index===spokenScene) return;
   spokenScene=scene.index; speak(scene.narration);
 }
-function testVoice(){ speechSynthesis.cancel(); speak('StickForge voice test. It sounds ugly, but the goblin speaks. Now with more movement.'); }
+function testVoice(){ if(!TTS){ setStatus('This browser has no built-in voice. Video still plays; try Chrome or Edge for narration.'); return; } stopSpeech(); speak('StickForge voice test. It sounds ugly, but the goblin speaks. Now with more movement.'); }
 
 function download(text,name,type='text/plain'){
   const blob=new Blob([text],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),500);
@@ -817,7 +822,7 @@ function init(){
   });
   $('timeline').oninput=seek; $('testVoiceBtn').onclick=testVoice;
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
-  loadVoices(); speechSynthesis.onvoiceschanged=loadVoices;
+  loadVoices(); if(TTS) TTS.onvoiceschanged=loadVoices;
   syncTheme(); drawFrame(0);
   // ?storyboard=samples/foo.json opens straight into a saved storyboard (shareable links).
   const sbUrl = new URLSearchParams(location.search).get('storyboard');
