@@ -182,7 +182,7 @@ function makeStoryboard() {
 }
 
 // ---------- JSON import: an outside director (ChatGPT, Codex, a human) writes the storyboard ----------
-const VISUAL_TYPES = ['hook','goblin','sneak','heist','underground','machine','network','console','house','council','choice','map','conflict','idea','closing','gate','road','ruins','omen','pyre'];
+const VISUAL_TYPES = ['sky','sea','hook','goblin','sneak','heist','underground','machine','network','console','house','council','choice','map','conflict','idea','closing','gate','road','ruins','omen','pyre'];
 const CAMERAS = ['slow_push','pan','wide','shake','zoom_out','drift'];
 
 function parseJsonLoose(text){
@@ -297,7 +297,7 @@ Visual types (pick the one that best stages the idea):
 hook (big question), closing (final line), idea (lightbulb), choice (fork in the road),
 map, conflict (two figures clash), council (power/law/vote), house (homes/households/bills),
 machine, network, console (tech/systems), goblin, sneak, heist, underground (hidden actors/loot),
-gate, road, ruins, omen, pyre (grimdark set pieces).
+gate, road, ruins, omen, pyre (grimdark set pieces),\nsky (night sky + stars; action "broadcast" adds expanding radio rings), sea (night watch on dark water, light on horizon).\n\nOptional "labels" inside visual rename the scene's built-in signs so they fit the essay:\n{ "sign": "...", "bubble": "...", "machine": "...", "crate": "...", "headline": "...", "a": "...", "b": "...", "c": "..." } ("" hides one).
 
 Rules: one idea per scene, first scene must justify the video in 20 seconds,
 escalate at the midpoint, end on a memorable line rather than a call to action.
@@ -463,8 +463,10 @@ function arrow(x1,y1,x2,y2,progress=1,color=P.accent){
   ctx.restore();
 }
 function sign(x,y,text,enter=1){
-  ctx.save(); ctx.globalAlpha=clamp(enter,0,1); ctx.translate(x, y-(1-enter)*40); ctx.font=`bold 28px ${P.font}`;
+  if(text==='') return;
+  ctx.save(); ctx.globalAlpha=clamp(enter,0,1); ctx.font=`bold 28px ${P.font}`;
   const label=L(text), w=Math.max(230, ctx.measureText(label).width+48);
+  ctx.translate(clamp(x, 20, 1260-w), y-(1-enter)*40);
   ctx.fillStyle=P.grim ? 'rgba(10,6,6,.82)' : P.inkGhost; ctx.fillRect(0,0,w,110);
   ctx.strokeStyle=P.ink; ctx.lineWidth=5; ctx.strokeRect(0,0,w,110); ctx.fillStyle=P.ink; ctx.textAlign='center'; ctx.fillText(label,w/2,65); ctx.restore();
 }
@@ -480,6 +482,7 @@ function crate(x,y,enter=1,label='LOOT'){
   ctx.save(); ctx.globalAlpha=clamp(enter,0,1); ctx.translate(x,y+(1-enter)*50); ctx.strokeStyle=P.wood; ctx.fillStyle=P.woodSoft; ctx.lineWidth=5; ctx.fillRect(0,0,110,90); ctx.strokeRect(0,0,110,90); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(110,90); ctx.moveTo(110,0); ctx.lineTo(0,90); ctx.stroke(); ctx.fillStyle=P.accent; ctx.font=`bold 20px ${P.font}`; ctx.textAlign='center'; ctx.fillText(label,55,52); ctx.restore();
 }
 function thoughtBubble(x,y,text,enter=1){
+  if(text==='') return;
   ctx.save(); ctx.globalAlpha=clamp(enter,0,1); ctx.fillStyle=P.inkFaint; ctx.strokeStyle=P.ink; ctx.lineWidth=4; roundRect(x,y,300,90,22,true,true); ctx.fillStyle=P.ink; ctx.font=`bold 24px ${P.font}`; ctx.textAlign='center'; wrapText(L(text),x+150,y+38,250,28); ctx.restore();
 }
 function roundRect(x,y,w,h,r,fill,stroke){
@@ -540,22 +543,48 @@ function drawSceneVisual(scene, p, local, globalTime){
   const enter2 = clamp((p-.18)*5,0,1);
   const enter3 = clamp((p-.42)*5,0,1);
   const enter4 = clamp((p-.66)*5,0,1);
+  // Storyboards can rename a scene's signs/bubbles: visual.labels = { sign, bubble, machine, crate, headline, a, b, c }.
+  const T = (key, fallback) => scene.visual.labels?.[key] ?? fallback;
 
   ctx.save(); ctx.fillStyle=P.accentSoft;
   for(let i=0;i<beatCount;i++){ ctx.fillRect(42+i*34,42,24,8); }
   ctx.fillStyle=P.accent; ctx.fillRect(42+beat*34,39,24,14); ctx.restore();
 
-  if(type==='gate'){
+  if(type==='sky'){
+    for(let i=0;i<140;i++){ const tw=.35+.65*pulse(globalTime*(1+rand(i+7)*2)+i); ctx.fillStyle=`rgba(238,232,220,${(tw*clamp(p*3-rand(i)*.5,0,1)).toFixed(3)})`; ctx.fillRect(rand(i)*1280, rand(i+300)*430, 2+(i%9===0), 2+(i%9===0)); }
+    ctx.save(); ctx.strokeStyle=P.ink; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(0,540); ctx.lineTo(1280,540); ctx.stroke(); ctx.restore();
+    if(scene.visual.action==='broadcast'){
+      ctx.save(); ctx.lineWidth=3;
+      for(let r=0;r<7;r++){ const rad=((globalTime*60 + r*140) % 980); ctx.strokeStyle=P.accent; ctx.globalAlpha=clamp(enter2*(1-rad/980),0,1); ctx.beginPath(); ctx.arc(330,500,rad,Math.PI,Math.PI*2); ctx.stroke(); }
+      ctx.restore();
+      ctx.save(); ctx.strokeStyle=P.ink; ctx.lineWidth=6; ctx.beginPath(); ctx.arc(330,470,40,Math.PI*1.1,Math.PI*1.9); ctx.moveTo(330,450); ctx.lineTo(330,540); ctx.stroke(); ctx.restore();
+    }
+    drawStick(lerp(820,720,enter1),520,0.95,'neutral',phase*.4,'point');
+    if(beat>0) thoughtBubble(780,130,T('bubble','where is everyone?'),enter2);
+    if(beat>2 && T('sign','')) sign(80,90,T('sign',''),enter4);
+  } else if(type==='sea'){
+    ctx.save(); ctx.strokeStyle=P.ink; ctx.lineWidth=2; ctx.globalAlpha=.6; ctx.beginPath(); ctx.moveTo(0,330); ctx.lineTo(1280,330); ctx.stroke();
+    ctx.globalAlpha=.35; for(let w=0;w<6;w++){ ctx.beginPath(); for(let x=0;x<=1280;x+=20){ const y=360+w*38+Math.sin(x*.012+globalTime*1.3+w)*6; x?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.stroke(); }
+    ctx.restore();
+    const lightOn = clamp((p-.25)*4,0,1);
+    ctx.save(); ctx.globalAlpha=lightOn*(.55+.45*pulse(globalTime*3)); ctx.fillStyle=P.danger; ctx.shadowColor=P.danger; ctx.shadowBlur=30; ctx.beginPath(); ctx.arc(1010,322,7,0,Math.PI*2); ctx.fill(); ctx.restore();
+    const bob=Math.sin(globalTime*1.3)*6;
+    ctx.save(); ctx.translate(0,bob); ctx.strokeStyle=P.ink; ctx.fillStyle='#050303'; ctx.lineWidth=6;
+    ctx.beginPath(); ctx.moveTo(120,470); ctx.lineTo(560,470); ctx.lineTo(500,540); ctx.lineTo(170,540); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeRect(190,400,90,70); ctx.restore();
+    drawStick(420,bob+386,0.8,p>.3?'neutral':'hooded',phase*.3,'idle');
+    if(beat>1) sign(820,110,T('sign','UNKNOWN LIGHT'),enter3);
+  } else if(type==='gate'){
     gateArch(640,500,ease(clamp((p-.15)*2.2,0,1)),enter1);
     drawStick(640,lerp(560,500,enter3),lerp(1.3,0.8,ease(clamp((p-.45)*2,0,1))),'hooded',phase,p>.45?'walk':'idle');
     crow(lerp(300,1100,p),160+Math.sin(phase)*20,phase,1.2);
-    if(beat>2) sign(900,120,'BEYOND THE WALL',enter4);
+    if(beat>2) sign(900,120,T('sign','BEYOND THE WALL'),enter4);
   } else if(type==='road'){
     ctx.save(); ctx.fillStyle='#120b09'; ctx.beginPath(); ctx.moveTo(560,470); ctx.lineTo(720,470); ctx.lineTo(1100,720); ctx.lineTo(180,720); ctx.closePath(); ctx.fill(); ctx.restore();
     for(let i=0;i<5;i++){ const tx=((i*300 - globalTime*40) % 1500 + 1500) % 1500 - 110; deadTree(tx, 520 + (i%2)*40, 0.9 + (i%3)*.2, Math.sin(phase+i)); }
     for(let i=0;i<3;i++) drawStick(lerp(260,860,p)-i*120,500+i*6,0.9,'hooded',phase+i*.9,'walk');
     crow(lerp(1100,200,p),140,phase,1); crow(lerp(1200,300,p),190,phase+1,.8);
-    if(beat>1) thoughtBubble(470,90,'the maps stop here',enter3);
+    if(beat>1) thoughtBubble(470,90,T('bubble','the maps stop here'),enter3);
   } else if(type==='ruins'){
     for(let i=0;i<6;i++){ const e=clamp((p-i*.07)*4,0,1); const h=[260,340,200,380,240,300][i];
       ctx.save(); ctx.globalAlpha=e; ctx.fillStyle='#140d0c'; ctx.strokeStyle=P.ink; ctx.lineWidth=4;
@@ -564,50 +593,50 @@ function drawSceneVisual(scene, p, local, globalTime){
       for(let w=0;w<3;w++){ ctx.fillStyle=(i+w+beat)%4===0?'rgba(255,90,31,.6)':'#050303'; ctx.fillRect(x+30,top+70+w*55,24,30); }
       ctx.restore(); }
     drawStick(640,520,0.9,'hooded',phase,'idle');
-    if(beat>1) sign(525,90,'HERE STOOD A CITY',enter3);
+    if(beat>1) sign(525,90,T('sign','HERE STOOD A CITY'),enter3);
   } else if(type==='omen'){
     skull(640,260,1.5+ease(p)*.25,pulse(phase*1.5),enter1);
     drawStick(lerp(260,420,enter2),520,1,'hooded',phase,'idle');
     drawStick(lerp(1020,860,enter3),520,1,'hooded',-phase,'point');
     for(let i=0;i<4;i++) crow(640+Math.cos(phase*.4+i*1.6)*300,240+Math.sin(phase*.4+i*1.6)*110,phase+i,.9);
-    if(beat>2) sign(40,90,'THE OMEN',enter4);
+    if(beat>2) sign(40,90,T('sign','THE OMEN'),enter4);
   } else if(type==='pyre'){
     flames(640,520,phase,1.2,enter1);
     for(let i=0;i<4;i++){ const side=i<2?-1:1; drawStick(640+side*(260+(i%2)*140),520,0.9,'hooded',phase+i,'idle'); }
     ctx.save(); ctx.fillStyle=P.text; ctx.font=`bold 44px ${P.font}`; ctx.textAlign='center'; ctx.globalAlpha=enter3;
-    ctx.fillText(scene.index===storyboard.scenes.length ? L('REMEMBER THIS') : 'KEEP THE FIRE',640,110); ctx.restore();
+    ctx.fillText(T('headline', scene.index===storyboard.scenes.length ? L('REMEMBER THIS') : 'KEEP THE FIRE'),640,110); ctx.restore();
   } else if(type==='hook'){
     drawStick(lerp(180,300,enter1),470,1.35,'confused',phase,'idle');
-    drawMachine(lerp(960,780,enter2),210,250,210,'THE SYSTEM',phase,enter2);
+    drawMachine(lerp(960,780,enter2),210,250,210,T('machine','THE SYSTEM'),phase,enter2);
     arrow(460,380,750,320,enter3);
-    thoughtBubble(420,120, scene.index === 1 ? 'wait... what?' : 'pay attention', enter4);
+    thoughtBubble(420,120, T('bubble', scene.index === 1 ? 'wait... what?' : 'pay attention'), enter4);
   } else if(type==='goblin'){
     drawStick(240,470,1.2,'neutral',phase,'point');
     drawGoblin(lerp(1030,640,bp),470,1.2,phase,'sneak');
-    crate(820,455,enter2,'PANTRY');
+    crate(820,455,enter2,T('crate','PANTRY'));
     if(beat > 1) coin(760 + Math.sin(phase)*12, 410 - bp*45, phase, '✦');
-    thoughtBubble(360,130,'the crack in the wall matters',enter3);
+    thoughtBubble(360,130,T('bubble','the crack in the wall matters'),enter3);
   } else if(type==='sneak'){
     drawHouse(180,310,phase,enter1);
     drawGoblin(lerp(-80,520,p),490,1.1,phase,'sneak');
-    sign(780,240,'GUARD ASLEEP',enter2);
+    sign(780,240,T('sign','GUARD ASLEEP'),enter2);
     if(beat > 1) arrow(560,430,760,320,bp,P.goblin);
-    crate(900,455,enter3,'LOCK');
+    crate(900,455,enter3,T('crate','LOCK'));
   } else if(type==='heist'){
-    crate(210,450,enter1,'LOOT');
+    crate(210,450,enter1,T('crate','LOOT'));
     drawGoblin(lerp(260,780,p),480,1.15,phase,'walk');
     for(let i=0;i<5;i++) coin(420+i*80, 360 + Math.sin(phase+i)*22, phase+i, i%2?'?':'!');
     if(beat > 2) burst(940,340,phase,enter4);
   } else if(type==='underground'){
     ctx.save(); ctx.strokeStyle=P.dirt; ctx.lineWidth=20; ctx.beginPath(); ctx.moveTo(0,540); ctx.bezierCurveTo(260,500,420,590,640,530); ctx.bezierCurveTo(820,480,990,575,1280,520); ctx.stroke(); ctx.restore();
     drawGoblin(lerp(120,980,p),500+Math.sin(phase)*14,1.05,phase,'sneak');
-    sign(430,210,'UNDER THE SYSTEM',enter2);
+    sign(430,210,T('sign','UNDER THE SYSTEM'),enter2);
     arrow(300,430,820,430,enter3,P.goblin);
   } else if(type==='machine'){
-    drawMachine(480,180,320,260,'MACHINE',phase,enter1);
+    drawMachine(480,180,320,260,T('machine','MACHINE'),phase,enter1);
     for(let i=0;i<6;i++) arrow(130+i*80,560,540,440,clamp((p*6-i*.35),0,1));
     if(beat > 1) burst(640,310,phase,enter3);
-    sign(830,120,'OUTPUT',enter4);
+    sign(830,120,T('sign','OUTPUT'),enter4);
   } else if(type==='network'){
     const nodes = [[260,250],[520,180],[760,260],[1000,180],[440,470],[820,480]];
     ctx.save(); ctx.strokeStyle=P.cool; ctx.lineWidth=5;
@@ -615,44 +644,44 @@ function drawSceneVisual(scene, p, local, globalTime){
     nodes.forEach((n,i)=>{ ctx.fillStyle=i===beat+1?P.accent:P.cool; ctx.beginPath(); ctx.arc(n[0]+Math.sin(phase+i)*8,n[1]+Math.cos(phase+i)*8,18,0,Math.PI*2); ctx.fill(); });
     ctx.restore();
   } else if(type==='console'){
-    drawMachine(390,160,500,320,'CONTROL PANEL',phase,enter1);
+    drawMachine(390,160,500,320,T('machine','CONTROL PANEL'),phase,enter1);
     drawStick(250,500,1.1,'confused',phase,'point');
     ctx.save(); ctx.fillStyle=P.goblin; ctx.font='bold 30px monospace'; ctx.textAlign='left';
     ['RUN IDEA.EXE','SCAN SYSTEM','EXPORT TRUTH','NO SHORTS'].forEach((line,i)=>{ if(p > i*.2) ctx.fillText('> '+line,440,235+i*55); });
     ctx.restore();
   } else if(type==='house'){
     drawHouse(210,300,phase,enter1);
-    drawMachine(780,230,240,190,'GRID',phase,enter2);
+    drawMachine(780,230,240,190,T('machine','GRID'),phase,enter2);
     arrow(420,390,760,330,enter3);
     coin(550+Math.sin(phase)*25,450-Math.sin(p*Math.PI)*120,phase,'$');
-    sign(850,90,'BILL RISES',enter4);
+    sign(850,90,T('sign','BILL RISES'),enter4);
   } else if(type==='council'){
-    sign(160,150,'KING',enter1); sign(520,150,'COUNCIL',enter2); sign(880,150,'GOBLIN AUDIT',enter3);
+    sign(160,150,T('a','KING'),enter1); sign(520,150,T('b','COUNCIL'),enter2); sign(880,150,T('c','GOBLIN AUDIT'),enter3);
     drawGoblin(640,500,1.15,phase,'point');
     arrow(390,320,540,320,enter2); arrow(760,320,890,320,enter3,P.goblin);
   } else if(type==='choice'){
     drawStick(620,470,1.25,'neutral',phase,'point');
-    sign(160,210,'OPTION A',enter1); sign(890,210,'OPTION B',enter2);
+    sign(160,210,T('a','OPTION A'),enter1); sign(890,210,T('b','OPTION B'),enter2);
     arrow(590,390,300,300,beat===0?bp:1); arrow(690,390,1010,300,beat>1?bp:0,P.danger);
   } else if(type==='map'){
-    sign(220,170,'LOCAL',enter1); sign(760,170,'NATIONAL',enter2); arrow(455,280,750,280,enter3);
+    sign(220,170,T('a','LOCAL'),enter1); sign(760,170,T('b','NATIONAL'),enter2); arrow(455,280,750,280,enter3);
     drawStick(lerp(250,900,p),520,1,'neutral',phase,'walk');
-    if(beat>2) thoughtBubble(480,360,'follow the incentives',enter4);
+    if(beat>2) thoughtBubble(480,360,T('bubble','follow the incentives'),enter4);
   } else if(type==='conflict'){
     drawStick(lerp(280,390,enter1),470,1.2,'angry',phase,'walk');
     drawStick(lerp(980,850,enter2),470,1.2,'angry',-phase,'walk');
     burst(640,310,phase,enter3);
-    if(beat>2) sign(525,150,'SYSTEM BREAK',enter4);
+    if(beat>2) sign(525,150,T('sign','SYSTEM BREAK'),enter4);
   } else if(type==='idea'){
     drawStick(260,470,1.15,'confused',phase,'idle');
-    drawMachine(700,220,260,190,'IDEA',phase,enter1);
+    drawMachine(700,220,260,190,T('machine','IDEA'),phase,enter1);
     arrow(390,360,690,310,enter2,P.goblin);
-    thoughtBubble(450,120,'make it visible',enter3);
+    thoughtBubble(450,120,T('bubble','make it visible'),enter3);
   } else if(type==='closing'){
     drawGoblin(330,480,1.25,phase,'point');
-    drawMachine(760,240,250,180,'LESSON',phase,enter1);
+    drawMachine(760,240,250,180,T('machine','LESSON'),phase,enter1);
     arrow(500,360,750,320,enter2,P.goblin);
-    ctx.save(); ctx.fillStyle=P.accent; ctx.font=`bold 46px ${P.font}`; ctx.textAlign='center'; ctx.globalAlpha=enter3; ctx.fillText(L('REMEMBER THIS'),640,120); ctx.restore();
+    ctx.save(); ctx.fillStyle=P.accent; ctx.font=`bold 46px ${P.font}`; ctx.textAlign='center'; ctx.globalAlpha=enter3; ctx.fillText(T('headline',L('REMEMBER THIS')),640,120); ctx.restore();
     if(beat>2) burst(640,220,phase,enter4);
   } else {
     drawStick(640,470,1.3,'neutral',phase,'walk');
@@ -780,5 +809,10 @@ function init(){
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
   loadVoices(); speechSynthesis.onvoiceschanged=loadVoices;
   syncTheme(); drawFrame(0);
+  // ?storyboard=samples/foo.json opens straight into a saved storyboard (shareable links).
+  const sbUrl = new URLSearchParams(location.search).get('storyboard');
+  if(sbUrl) fetch(sbUrl).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); })
+    .then(t=>importText(t, sbUrl.split('/').pop()))
+    .catch(err=>setStatus(`Could not load ${sbUrl}: ${err.message}`));
 }
 init();
